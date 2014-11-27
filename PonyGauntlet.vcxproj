@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{27D0A35F-E232-411A-A86B-5257E750DE7B}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>PonyGauntlet</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalIncludeDirectories>C:\allegro\5.0.9\include;C:\Libraries\allegro_tiled\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>C:\allegro\5.0.9\lib;C:\Libraries\allegro_tiled\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>allegro-5.0.9-monolith-mt-debug.lib;allegro_tiled-debug.lib;libxml2.lib;zdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\allegro\5.0.9\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>C:\allegro\5.0.9\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>allegro-5.0.9-monolith-mt.lib;allegro_tiled.lib;libxml2.lib;zdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Allegro.cpp" />
+    <ClCompile Include="Bitmap.cpp" />
+    <ClCompile Include="ConfigFile.cpp" />
+    <ClCompile Include="Controls.cpp" />
+    <ClCompile Include="EntityBatchRenderer.cpp" />
+    <ClCompile Include="GameCharacter.cpp" />
+    <ClCompile Include="GameDataRepository.cpp" />
+    <ClCompile Include="GameEntity.cpp" />
+    <ClCompile Include="GauntletApp.cpp" />
+    <ClCompile Include="LevelMap.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Music.cpp" />
+    <ClCompile Include="ObjectField.cpp" />
+    <ClCompile Include="Players.cpp" />
+    <ClCompile Include="SfxManager.cpp" />
+    <ClCompile Include="Sound.cpp" />
+    <ClCompile Include="TestGameScreen.cpp" />
+    <ClCompile Include="TileObject.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ActionBar.hpp" />
+    <ClInclude Include="ActionList.hpp" />
+    <ClInclude Include="Allegro.hpp" />
+    <ClInclude Include="AttackType.hpp" />
+    <ClInclude Include="Bitmap.hpp" />
+    <ClInclude Include="BreakableWall.hpp" />
+    <ClInclude Include="Button.hpp" />
+    <ClInclude Include="CollisionGridCell.hpp" />
+    <ClInclude Include="ConfigFile.hpp" />
+    <ClInclude Include="Controls.hpp" />
+    <ClInclude Include="Directions.hpp" />
+    <ClInclude Include="EntityBatchRenderer.hpp" />
+    <ClInclude Include="Exit.hpp" />
+    <ClInclude Include="GameCharacter.hpp" />
+    <ClInclude Include="GameDataRepository.hpp" />
+    <ClInclude Include="GameEntity.hpp" />
+    <ClInclude Include="GameScreen.hpp" />
+    <ClInclude Include="Gate.hpp" />
+    <ClInclude Include="GauntletApp.hpp" />
+    <ClInclude Include="Hazard.hpp" />
+    <ClInclude Include="Item.hpp" />
+    <ClInclude Include="LevelMap.hpp" />
+    <ClInclude Include="Lever.hpp" />
+    <ClInclude Include="Monster.hpp" />
+    <ClInclude Include="Music.hpp" />
+    <ClInclude Include="ObjectField.hpp" />
+    <ClInclude Include="PlayerCharacter.hpp" />
+    <ClInclude Include="PlayerCharacterType.hpp" />
+    <ClInclude Include="PlayerInput.hpp" />
+    <ClInclude Include="Players.hpp" />
+    <ClInclude Include="RectAndCircle.hpp" />
+    <ClInclude Include="SfxManager.hpp" />
+    <ClInclude Include="Sound.hpp" />
+    <ClInclude Include="Spawner.hpp" />
+    <ClInclude Include="SpriteSheetAnimation.hpp" />
+    <ClInclude Include="TestGameScreen.hpp" />
+    <ClInclude Include="Tile.hpp" />
+    <ClInclude Include="TileObject.hpp" />
+    <ClInclude Include="TreasureChest.hpp" />
+    <ClInclude Include="XYPair.hpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
