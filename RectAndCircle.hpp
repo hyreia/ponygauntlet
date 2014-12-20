@@ -90,6 +90,36 @@ struct Rect
 			h = other.h;
 		}
 
+		bool IsVerticalLineIntersecting(T lineX, T lineY1, T lineY2)
+		{
+			if(lineX < x || lineX > x+w) return false;
+
+			//if the line is shorter than the rectangle
+			if(lineY1 > y && lineY1 < y+w) return true;
+			if(lineY2 > y && lineY2 < y+w) return true;
+
+			//if the line is longer than the rectangle
+			if(y > lineY1 && y < lineY2) return true;
+			if(y+w > lineY1 && y+w < lineY2) return true;
+		
+			return false;
+		}
+		bool IsHorizontalLineIntersecting(T lineX1, T lineX2, T lineY)
+		{
+			if(lineY < y || lineY > y+h) return false;
+
+			//if the line is shorter than the rectangle
+			if(lineX1 > x && lineX1 < x+h) return true;
+			if(lineX2 > x && lineX2 < x+h) return true;
+
+			//if the line is longer than the rectangle
+			if(x > lineX1 && x < lineX2) return true;
+			if(x+h > lineX1 && x+h < lineX2) return true;
+		
+
+			return false;
+		}
+
 		bool GetCollisionResolution(Rect<T> &b, XYPair<T> &normal)
 		{
 			/* Since the vector is a pointer then it could have been
@@ -145,12 +175,12 @@ struct Rect
 
 /* Returns true if rect a and b are intersecting. Sets normal to 
 the values needed to add to a's position to move it out of b. Subtract
-it from b to move b out of the way. Or mix and match.*/
+it from b to move b out of the way. Or mix and match.*
 inline bool GetCollisionResolution(const Rect<double> &a, const Rect<double> &b, XYPair<double> &normal)
 {
- /* Since the vector is a pointer then it could have been
-   intialized to any value so we need to make sure we initalize
-   the vectors X and Y to zero*/
+	///* Since the vector is a pointer then it could have been
+   //intialized to any value so we need to make sure we initalize
+   //the vectors X and Y to zero
    normal.x = 0;
    normal.y = 0;
 
@@ -164,7 +194,7 @@ inline bool GetCollisionResolution(const Rect<double> &a, const Rect<double> &b,
 
    // Calculate the distance between A and B
    Distance.x = ( ( b.x ) - ( a.x ) );
-   Distance.y = ( ( b.y ) - ( a.y /*- (a.h / 2)*/ ) );
+   Distance.y = ( ( b.y ) - ( a.y /*- (a.h / 2) ) );
    //Y has to account that this original algorithm assumes Y was in the center
 
    // Combine both rectangles and half the returned value
@@ -178,16 +208,16 @@ inline bool GetCollisionResolution(const Rect<double> &a, const Rect<double> &b,
    absDistance.y = ( Distance.y < 0.0f ) ? -Distance.y : Distance.y;
 
     /*If the absDistance X is less than X add and the absDistance is less than YAdd
-    then it dosen't take a genius to figure out they aren't colliding so return false*/
-   if( ! ( ( absDistance.x < XAdd ) && ( absDistance.y < YAdd ) ) ) {   
+    then it dosen't take a genius to figure out they aren't colliding so return false
+   //if( ! ( ( absDistance.x < XAdd ) && ( absDistance.y < YAdd ) ) ) {   
    return false;
    }
 
-   /*Get the magnitute by the overlap of the two rectangles*/
+   /*Get the magnitute by the overlap of the two rectangles
     XMagnitute = XAdd - absDistance.x;
     YMagnitute = YAdd - absDistance.y;
 
-   /*Determin what axis we need to act on based on the overlap*/
+   /*Determin what axis we need to act on based on the overlap
     if( XMagnitute < YMagnitute ) {
       normal.x = ( Distance.x >= 0) ? -XMagnitute : XMagnitute;
     }
@@ -197,6 +227,7 @@ inline bool GetCollisionResolution(const Rect<double> &a, const Rect<double> &b,
    // If we reached this point then we now know the was a collision
    return true;	
 }
+*/
 
 template <typename T>
 struct Circle
@@ -204,9 +235,9 @@ struct Circle
 	Circle(T x, T y, T r): cx(x), cy(y), radius(r)
 	{}
 	T cx, cy, radius;
-	Rect<T> Square()
+	Rect<T> Squared()
 	{
-		return Rect<T>(cx-radius, cy-radius, 2*radius, 2*radius);
+		return Rect<T>(cx-radius, cy-radius, 2*radius + 1, 2*radius + 1);
 	}	
 
 };
@@ -229,12 +260,12 @@ inline bool IsRectIntersectingCircle(double cx, double cy, double radius, Rect<d
 			if(point.y > rect.Bottom()) point.y = rect.Bottom();
 			if(point.y < rect.Top()) point.y = rect.Top();
 
-
 			//If snapped point is still within circle, rect is within circle
 			double distanceSquared =	(point.x - cx)*(point.x - cx) + 
 										(point.y - cy)*(point.y - cy);
-
-			return radius*radius > distanceSquared;
+			
+			//return radius*radius > distanceSquared; //can return true even if difference appears to be 0 because floating points
+			return ( radius*radius - distanceSquared > 0.00001); 
 		}
 }
 
@@ -247,10 +278,12 @@ inline bool IsPointInsideCircle(double cx, double cy, double r, double px, doubl
 
 inline bool IsCircleIntersectingCircle(double cx1, double cy1, double r1, double cx2, double cy2, double r2)
 {
+	const double EPSILON = 0.00001;
+
 	double distanceSquared =	(cx2 - cx1)*(cx2 - cx1) + 
 								(cy2 - cy1)*(cy2 - cy1);
-
-	return distanceSquared < (r1+r2)*(r1+r2);
+	
+	return ( (r1+r2)*(r1+r2) - distanceSquared > EPSILON);
 }
 
 #endif

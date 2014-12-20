@@ -60,6 +60,13 @@ void GauntletApp::StartFirstScreen()
 	//TODO: this
 	Player *player = &players.GetPlayer(1);
 	player->characterType = &data.playerCharacterTypes[PC_ARCHER];
+	player->isPlaying = true;
+	player->SetNameToCharacterName();
+	player->SetStatsToDefaultForCharacterType();
+
+	player = &players.GetPlayer(2);
+	player->characterType = &data.playerCharacterTypes[PC_WIZARD];
+	player->isPlaying = true;
 	player->SetNameToCharacterName();
 	player->SetStatsToDefaultForCharacterType();
 	

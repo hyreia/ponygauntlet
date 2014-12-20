@@ -35,8 +35,8 @@ public:
 	Bitmap();
 		
 	//Bitmap class does not take ownership of ALLEGRO_BITMAP bitmap; will not destroy bitmap
-	Bitmap(ALLEGRO_BITMAP *bitmap);
-	Bitmap::Bitmap(int width, int height, int flags = 0);
+	//Bitmap(ALLEGRO_BITMAP *bitmap);
+	//Bitmap::Bitmap(int width, int height, int flags = 0);
 	~Bitmap();
 	ALLEGRO_BITMAP *bitmap;
 

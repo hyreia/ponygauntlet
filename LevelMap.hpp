@@ -46,6 +46,7 @@ class LevelMap
 		bool IsThereAWallAt(int tileX, int tileY);
 		void RemoveWallAt(int tileX, int tileY);
 		int GetHeightOfWall(int tileX, int tileY);
+		bool IsCircleClearOfWallTiles(Circle<double> circle);
 
 		/* returns true if there is a floor and no wall*/
 		bool CanBeWalkedOn(int tileX, int tileY);

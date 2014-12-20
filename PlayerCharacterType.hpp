@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include "XYPair.hpp"
 #include "Bitmap.hpp"
 
 namespace gauntlet
@@ -24,7 +25,10 @@ namespace gauntlet
 			std::string _personalityDescription,
 			std::string _abilitiesDescription,
 			int _strength, int _magic, int _speed, int _armor,
-			int _mainAction):
+			int _mainAction,
+			XYPair<double> _imageSize,
+			double _height,
+			double _radius):
 		strength(_strength),
 		magic(_magic),
 		speed(_speed),
@@ -34,7 +38,10 @@ namespace gauntlet
 		bitmap(_bitmap),
 		personalityDescription(_personalityDescription),
 		abilitiesDescription(_abilitiesDescription),
-		mainAction(_mainAction)
+		mainAction(_mainAction),
+		radius(_radius),
+		imageSize(_imageSize),
+		height(_height)
 		{}
 		int strength, magic, speed, armor;
 
@@ -46,6 +53,9 @@ namespace gauntlet
 		std::string typeName;
 		std::string personalityDescription;
 		std::string abilitiesDescription;
+		XYPair<double> imageSize;
+		double height;
+		double radius;
 	};
 };
 

@@ -93,11 +93,14 @@
     <ClCompile Include="GauntletApp.cpp" />
     <ClCompile Include="LevelMap.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Monster.cpp" />
     <ClCompile Include="Music.cpp" />
     <ClCompile Include="ObjectField.cpp" />
+    <ClCompile Include="PlayerCharacter.cpp" />
     <ClCompile Include="Players.cpp" />
     <ClCompile Include="SfxManager.cpp" />
     <ClCompile Include="Sound.cpp" />
+    <ClCompile Include="Spawner.cpp" />
     <ClCompile Include="TestGameScreen.cpp" />
     <ClCompile Include="TileObject.cpp" />
   </ItemGroup>

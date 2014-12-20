@@ -14,6 +14,7 @@ namespace gauntlet
 		std::shared_ptr<Bitmap> GetSourceBitmap();
 		XYPair<double> ImageSource();
 		Rect<double> GetImageBox();
+		Rect<double> GetTileRect();
 
 		void AddTimeToAnimation(double time);
 	protected:

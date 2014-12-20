@@ -29,9 +29,9 @@ Bitmap::~Bitmap()
 	}
 }
 
-Bitmap::Bitmap(ALLEGRO_BITMAP *_bitmap):
-bitmap(_bitmap)
-{}
+//Bitmap::Bitmap(ALLEGRO_BITMAP *_bitmap):
+//bitmap(_bitmap)
+//{}
 
 std::shared_ptr<Bitmap> Bitmap::Load(const char *filename, bool willConvertMaskToAlpha)
 {
@@ -56,14 +56,17 @@ bitmap(NULL)
 	this->filename = filename;
 
 	ALLEGRO_PATH *path = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
+	al_drop_path_tail(path);
+	al_append_path_component(path, "data");
 	al_append_path_component(path, "images");
+	//al_append_path_component(path, "..\data\images");
+	
 
 	const char *filePath = al_path_cstr(path, ALLEGRO_NATIVE_PATH_SEP);
 	std::string filePathAndFile = filePath;
 	filePathAndFile.append(filename);
 
 	bitmap = al_load_bitmap(filePathAndFile.c_str());
-	//printf("Filename %s\n", filename);
 	if(bitmap && al_get_bitmap_flags(bitmap) & ALLEGRO_MEMORY_BITMAP)
 	{
 		printf("WARNING: MEMORY BITMAP BEING USED.\n");
@@ -76,6 +79,7 @@ bitmap(NULL)
 	al_destroy_path(path);
 }
 
+/*
 Bitmap::Bitmap(int width, int height, int flags)
 {
 	if(flags != 0)
@@ -90,7 +94,7 @@ Bitmap::Bitmap(int width, int height, int flags)
 
 	if(flags != 0)
 		al_set_new_bitmap_flags(ALLEGRO_VIDEO_BITMAP);
-}	
+}*/	
 
 void Bitmap::Lock()
 {

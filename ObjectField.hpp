@@ -18,6 +18,8 @@ having a virtual methods or a bunch of dynamic casts I opted for
 a lot of pointers. This means memory usage is higher but it's less messy.*/
 namespace gauntlet
 {
+	class GameCharacter;
+
 	//Things that generally don't impede movement and are types of GameEntities
 	class Exit;
 	class Item;
@@ -63,10 +65,20 @@ namespace gauntlet
 		void InitializeToSize(int width, int height);
 		void Clear();
 		std::vector< XYPair<int> > GetTilesInRange(Rect<double> range);
+		std::vector< XYPair<int> > GetFirstAndLastTileInRange(Rect<double> range);
 		void CorrectGateTiles(); //Call this once to correct tile images
+
+		bool TileHasObjectThatBlocksCharacterFromMoving(GameCharacter *character, int tileX, int tileY);
 
 		/* Keeps pointers to projectiles, monsters and players and keep it publically reachable*/
 		CollisionGrid collisionGrid;
+		void Insert(PlayerCharacter *pc);
+		void Insert(Monster *monster);
+		void Remove(PlayerCharacter *pc);
+		void Remove(Monster *monster);
+
+		void SetSpawner(int tileX, int tileY, Spawner *newSpawner);
+		Spawner *GetSpawner(int tileX, int tileY);
 
 	private:
 		std::vector< std::vector< ObjectFieldCell> > objectField;

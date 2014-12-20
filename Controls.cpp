@@ -5,6 +5,7 @@
 #include "XYPair.hpp"
 #include "PlayerInput.hpp"	//Need to implement
 #include "Controls.hpp"
+#include "GauntletApp.hpp"
 #include <cmath>
 
 #include <iostream>
@@ -133,6 +134,17 @@ void Controls::ReportMousePosition(int x, int y)
 {
 	mousePositions[0] = x;
 	mousePositions[1] = y;
+}
+
+void Controls::PollMousePosition()
+{
+	ALLEGRO_MOUSE_STATE mouse;
+	al_get_mouse_state(&mouse);
+	app->allegro.TranslateMousePositionToBufferPosition(mouse.x, mouse.y);
+	mousePositions[0] = mouse.x;
+	mousePositions[1] = mouse.y;
+
+	
 }
 
 void Controls::AdjustMouseZPosition(bool isIncrementing)

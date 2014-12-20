@@ -3,6 +3,8 @@
 
 using namespace gauntlet;
 
+size_t Player::nextPlayerIDAvailable = 0;
+
 Player::Player():
 characterType(NULL),
 health(100),
@@ -20,7 +22,8 @@ strengthMod(0),
 magicMod(0),
 armorMod(0),
 speedMod(0),
-isPlaying(false)
+isPlaying(false),
+ID(++nextPlayerIDAvailable)
 {}
 
 Player::~Player(){}

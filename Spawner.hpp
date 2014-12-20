@@ -5,7 +5,14 @@
 
 namespace gauntlet
 {
+	enum TEMPORARY_SPAWNER_LIST
+	{
+		SHALLOW_GRAVE
+	};
+
 	struct MonsterType;
+
+	const int NO_SPAWN_LIMIT = -1;
 
 	struct SpawnerType
 	{
@@ -19,9 +26,17 @@ namespace gauntlet
 		int spawningAnimationIndex;
 		int damagedAnimationIndex;
 
+		/* number of monsters it can spawn until it destroys itself, -1 for unlimited*/
 		int spawnLimit;
+
+		/* spawner starting/max ife*/
 		int durability;
+		
+		/* in seconds */
 		double spawnCooldownRate;
+		
+		/* can be walked on top of, 
+			side effect: monsters don't spawn on top of but to the side of*/
 		bool isMovementImpedingWall;
 	};
 
@@ -30,9 +45,8 @@ namespace gauntlet
 		 //as damage is taken, selection ascends the list
 		SPAWNER_MONSTER_SELECT_CHANGES_ON_DAMAGE,
 		//monster spawned is rand() from list
-		SPAWNER_MONSTER_SELECT_IS_RANDOM,
-		//random, but monsters at position x is twice as common as monster as position x+1
-		SPAWNER_MONSTER_SELECT_IS_RANDOM_BUT_WEIGHTED 
+		SPAWNER_MONSTER_SELECT_IS_RANDOM
+		//SPAWNER_MONSTER_SELECT_IS_RANDOM_BUT_WEIGHTED 
 							
 	};
 
@@ -43,20 +57,30 @@ namespace gauntlet
 	class Spawner: public TileObject
 	{
 	public:
-		Spawner(SpawnerType *_type, int tileX, int tileY):
-		TileObject(tileX, tileY),
-		type(_type)
-		{
-			spawnCooldown = 0.0;
-			spawnsLeft = type->spawnLimit;
-		}
+		Spawner(SpawnerType *type, int tileX, int tileY);
 
-		bool AreSpawnsLeft(){ !(spawnsLeft==0); }
-	private:
+		/* Returns new spawnCooldown value */
+		int DecrementSpawnCooldown();
+		void ResetSpawnCooldown();
+		bool WillBlockMovement();
+
+		void DecrementSpawnsLeft();
+		int GetSpawnsLeft();
+
+		double InflictDamage(int durabilityLost);
+		void GetDurabilityLeft();
+
+		XYPair<double> GetCenterOfTile();
+
+		MonsterType *GetMonsterTypeToSpawn();
+
 		SpawnerType *type;
 		int spawnsLeft;
 		int durabilityLeft;
+	private:
+
 		double spawnCooldown;
+
 
 	};
 };

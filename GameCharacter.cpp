@@ -1,15 +1,18 @@
 #include "GameCharacter.hpp"
 #include <allegro5/allegro.h>
+#include "Bitmap.hpp"
 
 using namespace gauntlet;
 
-GameCharacter::GameCharacter(XYPair<double> _position, double _radius,
+double GameCharacter::drawAlpha = 0.0;
+
+GameCharacter::GameCharacter(XYPair<double> _position, XYPair<double> _size,
 	std::shared_ptr<Bitmap> _bitmap,
 	Rect<double> _imageSource,
 	int _startFacing,
 	double _height,
 	double _altitude):
-GameEntity(Circle<double>(_position.x, _position.y, _radius), _bitmap,_imageSource),
+GameEntity( Rect<double>(_position.x, _position.y, _size.x, _size.y), _bitmap,_imageSource),
 	altitude(_altitude),
 	height(_height),
 	animationFacing(_startFacing),
@@ -19,7 +22,8 @@ GameEntity(Circle<double>(_position.x, _position.y, _radius), _bitmap,_imageSour
 	facingAngle(0.0),
 	numOfFacingAngleLocks(0),
 	numOfMovementLocks(0),
-	lastPosition(_position.x, _position.y)
+	lastPosition(_position.x, _position.y),
+	wasTileBlocked(false)
 {
 	//Set facingAngle from startFacing
 	facingAngle = ((double)animationFacing/(double)TOTAL_DIRECTIONS) * 2*ALLEGRO_PI;
@@ -30,9 +34,17 @@ Rect<double> GameCharacter::GetImageBoxAtDeltaTime(double alpha)
 {
 	return Rect<double>(
 		
-		(lastPosition.x + ((hitbox.cx)-lastPosition.x) * alpha)+imageToHitboxOffset.x - hitbox.radius,
-			(lastPosition.y + ((hitbox.cy)-lastPosition.y) * alpha)+imageToHitboxOffset.y - hitbox.radius,
+		(lastPosition.x + ((hitbox.x)-lastPosition.x) * alpha)+imageToHitboxOffset.x,
+			(lastPosition.y + ((hitbox.y)-lastPosition.y) * alpha)+imageToHitboxOffset.y + altitude,
 			imageSize.x, imageSize.y);
+}
+
+Rect<double> GameCharacter::GetHitboxAtDeltaTime(double alpha)
+{
+	return Rect<double>(
+			(lastPosition.x + ((hitbox.x)-lastPosition.x) * alpha),
+			(lastPosition.y + ((hitbox.y)-lastPosition.y) * alpha),
+			hitbox.w, hitbox.h);
 }
 
 void GameCharacter::SetVelocity(double x, double y)
@@ -44,15 +56,34 @@ XYPair<double> GameCharacter::GetVelocity()
 { 
 	return velocity; 
 }
+
+void GameCharacter::AddVelocityToPosition()
+{
+	hitbox.x += velocity.x;
+	hitbox.y += velocity.y;
+}
 	
 void GameCharacter::SetLastPosition(XYPair<double> previousPosition)
 {
 	lastPosition.x = previousPosition.x; lastPosition.y = previousPosition.y;
 }
 
-Circle<double> GameCharacter::GetNextHitbox()
+void GameCharacter::SetLastPositionToCurrentPosition()
 {
-	return Circle<double>(hitbox.cx+velocity.x,hitbox.cy+velocity.y, hitbox.radius);
+	lastPosition.x = hitbox.x; lastPosition.y = hitbox.y;
+}
+
+void GameCharacter::SetYVelocity(double y){ velocity.y = y; }
+void GameCharacter::SetXVelocity(double x){ velocity.x = x; }
+
+Rect<double> GameCharacter::GetNextHitbox()
+{
+	return Rect<double>(hitbox.x+velocity.x,hitbox.y+velocity.y, hitbox.w, hitbox.h);
+}
+
+XYPair<double> GameCharacter::ProjectedNextPosition()
+{
+	return XYPair<double>(hitbox.x+velocity.x, hitbox.y+velocity.y);
 }
 
 void GameCharacter::SetFacingAngle(double newFacing)
@@ -94,7 +125,7 @@ void GameCharacter::SetFacingFromRadian(double angle)
 			SetFacingDirection(DIR_DOWNLEFT);
 		else if(angle < 7*PI/4)
 			SetFacingDirection(DIR_DOWN);
-		else if(angle < 2*PI)
+		else
 			SetFacingDirection(DIR_DOWNRIGHT);
 }
 
@@ -118,12 +149,23 @@ void GameCharacter::UpdateAnimation()
 {
 	const double MOVING_ANIMATION_STARTING_COLUMN = 1.0;
 
+	if( (velocity.x != 0.0 || velocity.y != 0.0) && animation == IDLE_ANIMATION)
+	{
+		animation = MOVING_ANIMATION; stepsInAnimation = 0;
+	}
+	else if(velocity.x == 0.0 && velocity.y == 0.0 && animation == MOVING_ANIMATION)
+	{
+		animation = IDLE_ANIMATION; stepsInAnimation = 0;
+	}
+
 	SetFacingFromRadian(facingAngle);
 	imageDrawingFlags = DIRECTION_FLAGS[animationFacing];
 	imageSource.y = imageSize.y*DRAW_ROW_BY_CHAR_DIRECTION[animationFacing];
 	if(animation == MOVING_ANIMATION)
 	{
-		const double STEPS_IN_MOVING_ANIMATION = 6.0;
+		
+		const double STEPS_IN_MOVING_ANIMATION = imageBitmap->Width()/imageSize.x - 1.0;
+		printf("STEPS IN MOVING ANIMATION: %f\n", STEPS_IN_MOVING_ANIMATION);
 		if(stepsInAnimation >= STEPS_IN_MOVING_ANIMATION)
 		{
 			stepsInAnimation = stepsInAnimation - STEPS_IN_MOVING_ANIMATION;
@@ -188,4 +230,24 @@ void GameCharacter::RemoveLockFromMovement()
 bool GameCharacter::isMovementLocked()
 {
 	return (numOfMovementLocks>0);
+}
+
+double GameCharacter::GetRenderSortY()
+{
+	return (lastPosition.y + (hitbox.y-lastPosition.y) * drawAlpha) + hitbox.h;
+}
+
+bool gauntlet::CompareCharactersByYAxis(GameCharacter *a, GameCharacter *b)
+{
+	return (a->GetRenderSortY() < b->GetRenderSortY());
+}
+
+void GameCharacter::SetWasTileBlocked(bool isBlockedByTile)
+{
+	wasTileBlocked = isBlockedByTile;
+}
+
+bool GameCharacter::GetWasTileBlocked()
+{
+	return wasTileBlocked;
 }

@@ -25,8 +25,8 @@ namespace gauntlet
 
 		static Rect<double> TileToRect(int tileX, int tileY)
 		{
-			return Rect<double>(XYPair<double>(tileX*TILE_SIZE, tileY*TILE_SIZE),
-				XYPair<double>(TILE_SIZE, TILE_SIZE));
+			return Rect<double>(XYPair<double>(tileX*(TILE_SIZE), tileY*(TILE_SIZE)),
+				XYPair<double>(TILE_SIZE-1, TILE_SIZE-1));
 		}
 
 	private:

@@ -31,3 +31,9 @@ void TileObject::AddTimeToAnimation(double time)
 {
 	animations[currentAnimationIndex].AddTimeToAnimation(time);
 }
+
+Rect<double> TileObject::GetTileRect()
+{
+	auto tile = Tile::PixelToTile(centerPos.x, centerPos.y);
+	return Tile::TileToRect(tile.x, tile.y);
+}

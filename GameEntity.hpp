@@ -22,8 +22,9 @@ class GameEntity
 {
 	public:
 
-		Circle<double> GetHitbox();
+		Rect<double> GetHitbox();
 		XYPair<double> GetPosition();
+		double GetRadius();
 		void SetPosition(double x, double y);
 		void AddToPosition(double x, double y);
 
@@ -53,14 +54,14 @@ class GameEntity
 		std::vector< XYPair<int>  > tilesIntersected;
 
 		/* Public instead protected for debugging purposes*/
-		GameEntity(Circle<double> hitbox, std::shared_ptr<Bitmap> bitmap,
+		GameEntity(Rect<double> hitbox, std::shared_ptr<Bitmap> bitmap,
 			Rect<double> imageSource, int imageDrawingFlags = 0);
 		/* Does nothing */
 		virtual ~GameEntity();
+
 	protected:
 		/* Where entity actually is*/
-		Circle<double> hitbox;
-		//Rect<double> hitbox;
+		Rect<double> hitbox;
 
 		/* Offset from hitbox where entity is drawn (add to hitbox to get draw pos)*/
 		XYPair<double> imageToHitboxOffset;

@@ -33,12 +33,15 @@ namespace gauntlet
 		std::string name;
 		int score;
 		int credit;
+		const size_t ID;
 
 		/* Items that can be used as a secondary action from action bar*/
 		std::vector<int> inventory;
 
 		void SetStatsToDefaultForCharacterType();
 		void SetNameToCharacterName();
+
+		static size_t nextPlayerIDAvailable;
 	};
 
 	/* A place to keep players in the app */

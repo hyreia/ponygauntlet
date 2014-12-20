@@ -7,6 +7,8 @@
 #include "PlayerCharacterType.hpp"
 #include "AttackType.hpp"
 #include "SpriteSheetAnimation.hpp"
+#include "Monster.hpp"
+#include "Spawner.hpp"
 
 namespace gauntlet
 {
@@ -25,15 +27,15 @@ struct GameDataRepository
 	std::vector<PlayerCharacterType> playerCharacterTypes;
 	std::vector<SpriteSheetAnimationType> spriteSheetAnimationTypes;
 	std::map<int, AttackType> attackTypes;
-
+	std::map<int, MonsterType>			monsterTypes;
+	std::map<int, SpawnerType> spawnerTypes;
 private:
 	void CreatePlayerCharacterTypes();
 	void CreateAnimationTypes();
 	void CreateAttackTypes();
+	void CreateSpawnerTypes();
+	void CreateMonsterTypes();
 
-	void LoadNeededBitmaps();
-
-	std::vector< std::shared_ptr<Bitmap>> loadedBitmaps;
 };
 
 };

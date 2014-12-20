@@ -3,7 +3,7 @@
 
 using namespace gauntlet;
 
-GameEntity::GameEntity(Circle<double> _hitbox, std::shared_ptr<Bitmap> _bitmap,
+GameEntity::GameEntity(Rect<double> _hitbox, std::shared_ptr<Bitmap> _bitmap,
 Rect<double> _imageSource, int _imageDrawingFlags):
 hitbox(_hitbox), imageBitmap(_bitmap), imageSource(_imageSource.x, _imageSource.y),
 imageSize(_imageSource.w, _imageSource.h), imageDrawingFlags(_imageDrawingFlags)
@@ -17,43 +17,42 @@ GameEntity::~GameEntity(){}
 
 void GameEntity::CalculateImageToHitboxOffset()
 {
-	imageToHitboxOffset = XYPair<double>( ( (hitbox.radius*2)-imageSize.x)/2, (hitbox.radius*2)-imageSize.y);
+	//const double DIAMETER = hitbox.radius*2;
+	imageToHitboxOffset = XYPair<double>( ( (hitbox.w)-imageSize.x)/2, (hitbox.h)-imageSize.y);
 }
 
 void GameEntity::CalculateNumOfTileIntersectionsToReserve()
 {
 	int tilesToReserve = 0;
 
-	double diameter = hitbox.radius*2;
-
-
 	/* An entity smaller than or equal size of a tile sitting on the 
 	 * intersection of four tiles takes 4 (+1 for each direction), 
 	 if it's size is not easily divisble by tile size we need to round up to take into account the bit
 	 hanging over into the next tile over (ceil)
 	 */
-	tilesToReserve = int( ceil(diameter/double(Tile::TILE_SIZE)+1) *
-						  ceil(diameter/double(Tile::TILE_SIZE)+1));
+
+	tilesToReserve = int( ceil(hitbox.w/double(Tile::TILE_SIZE)) *
+						  ceil(hitbox.h/double(Tile::TILE_SIZE)));
 
 
 	tilesIntersected.reserve(tilesToReserve);
 }
 
-Circle<double> GameEntity::GetHitbox(){ return hitbox; }
-XYPair<double> GameEntity::GetPosition(){ return XYPair<double>(hitbox.cx, hitbox.cy); }
+Rect<double> GameEntity::GetHitbox(){ return hitbox; }
+XYPair<double> GameEntity::GetPosition(){ return XYPair<double>(hitbox.x, hitbox.y); }
 void GameEntity::SetPosition(double x, double y)
 {
-	hitbox.cx = x; hitbox.cy = y;
+	hitbox.x = x; hitbox.y = y;
 }
 void GameEntity::AddToPosition(double x, double y)
 {
-	hitbox.cx += x; hitbox.cy += y;
+	hitbox.x += x; hitbox.y += y;
 }
 		
 Rect<double> GameEntity::GetImageBox()
 {
-	return Rect<double>(	(hitbox.cx - hitbox.radius) +imageToHitboxOffset.x,
-					(hitbox.cy - hitbox.radius) + imageToHitboxOffset.y,
+	return Rect<double>(	(hitbox.x - hitbox.w) +imageToHitboxOffset.x,
+					(hitbox.y - hitbox.h) + imageToHitboxOffset.y,
 					imageSize.x, imageSize.y);
 }
 

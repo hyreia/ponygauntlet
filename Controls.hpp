@@ -40,6 +40,8 @@ public:
 	void ReportMouseButtonDown(int button);
 	void ReportMouseButtonUp(int keycode);
 	void ReportMousePosition(int x, int y);
+	/* Updates position of mouse without a mouse movement event by polling hardware */
+	void PollMousePosition();
 	void AdjustMouseZPosition(bool isIncrementing);
 	PlayerInput *GetPlayerInput(unsigned int playerNo = 1);
 

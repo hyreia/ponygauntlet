@@ -21,7 +21,7 @@ a facing angle, and a previous position where it was before it was moved last. *
 class GameCharacter: public GameEntity
 {
 public:
-	GameCharacter(XYPair<double> position, double radius,
+	GameCharacter(XYPair<double> position, XYPair<double> size,
 		std::shared_ptr<Bitmap> bitmap,
 		Rect<double> imageSource,
 		int startFacing,
@@ -35,13 +35,22 @@ public:
 	movement. */
 	Rect<double> GetImageBoxAtDeltaTime(double alpha);
 
+	double GetRenderSortY();
+
 	void SetVelocity(double x, double y);
 	XYPair<double> GetVelocity();
+	void SetYVelocity(double y);
+	void SetXVelocity(double x);
+	void AddVelocityToPosition();
+
 	/* Used to determine where to calculate imageBox for */
 	void SetLastPosition(XYPair<double> previousPosition);
+	void SetLastPositionToCurrentPosition();
 
 	/* Used to project where player is trying to move to*/
-	Circle<double> GetNextHitbox();
+	Rect<double> GetNextHitbox();
+	Rect<double> GetHitboxAtDeltaTime(double alpha);
+	XYPair<double> ProjectedNextPosition();
 
 	void SetFacingAngle(double newFacing);
 	double GetFacing();
@@ -64,6 +73,11 @@ public:
 	void AddLockToMovement();
 	void RemoveLockFromMovement();
 	bool isMovementLocked();
+
+	void SetWasTileBlocked(bool isBlockedByTile);
+	bool GetWasTileBlocked();
+
+	static double drawAlpha;
 protected:
 		
 	/* How far it is from the ground, applicable for projectiles, characters and tile collisions */
@@ -96,7 +110,15 @@ protected:
 
 	/* The closest to eight-directions the character's angle is facing */
 	int animationFacing;
+
+	/* If true, it was blocked from moving fully by a tile last frame,
+	 *  used for making movement between two tiles with one tile space easier
+	 * for player characters */
+	bool wasTileBlocked;
 };
+
+/* Ugly work around */
+ bool CompareCharactersByYAxis(GameCharacter *a, GameCharacter *b);
 
 };
 

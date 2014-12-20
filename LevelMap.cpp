@@ -10,7 +10,7 @@ char *LevelMap::GROUND_LAYER = "Ground";
 char *LevelMap::WALL_LAYER = "Wall";
 char *LevelMap::CEILING_LAYER = "Ceiling";
 
-const char *LevelMap::mapDirectory = "maps";
+const char *LevelMap::mapDirectory = "../data/maps";
 
 LevelMap::LevelMap():
 allegroMap(NULL),
@@ -196,9 +196,18 @@ bool LevelMap::CanBeWalkedOn(int tileX, int tileY)
 	ALLEGRO_MAP_LAYER *Floor = al_get_map_layer(allegroMap, GROUND_LAYER);
 	if(Floor)
 	{
-		ALLEGRO_MAP_LAYER *Wall = al_get_map_layer(allegroMap, WALL_LAYER);
-		if(!Wall) return true; //no wall, can be walked on
-		else return false; //wall in the way
+		if(al_get_single_tile_id(Floor, tileX, tileY) != 0)
+		{
+			ALLEGRO_MAP_LAYER *Wall = al_get_map_layer(allegroMap, WALL_LAYER);
+			if(!Wall) return true; //no walls, can be walked on
+			if(al_get_single_tile_id(Wall, tileX, tileY) != 0)
+			{
+				return false;
+			}
+			else return true;
+		}
+		else return false; //there's no floor here
+
 	}	
 	else return false; //no floor
 

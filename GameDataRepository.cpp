@@ -10,8 +10,8 @@ void GameDataRepository::Initialize()
 	CreatePlayerCharacterTypes();
 	CreateAnimationTypes();
 	CreateAttackTypes();
-
-	//LoadNeededBitmaps();
+	CreateMonsterTypes();
+	CreateSpawnerTypes();
 }
 
 void GameDataRepository::Destroy()
@@ -29,11 +29,12 @@ void GameDataRepository::CreatePlayerCharacterTypes()
 	PlayerCharacterType warrior(
 		"Strawberry Surprise",
 		"Warrior",
-		Bitmap::Load("WarriorUpdate.png"),
+		Bitmap::Load("Warrior.png"),
 		"An earth pony with incredibly strength and insatiable apetite for violence",
 		"Strong melee attacks and heavy armor",
 		200, 50, 50, 100,
-		HAMMER_SWING);
+		HAMMER_SWING,
+		XYPair<double>(96, 96), 50, 16);
 	warrior.secondaryInherentActions.push_back(GROUND_POUND);
 	warrior.secondaryInherentActions.push_back(HAMMER_SMASH);
 
@@ -41,11 +42,12 @@ void GameDataRepository::CreatePlayerCharacterTypes()
 	PlayerCharacterType wizard(
 		"Golden Bolt",
 		"Wizard",
-		Bitmap::Load("WizardUpdate.png"),
+		Bitmap::Load("Wizard.png"),
 		"A reserved unicorn with power and the wisdom to use it responsibly",
 		"Ranged and guided attacks",
 		50, 200, 100, 50,
-		BALL_LIGHTNING);
+		BALL_LIGHTNING,
+		XYPair<double>(96, 96), 50, 16);
 	wizard.secondaryInherentActions.push_back(LASER_BLAST);
 	wizard.secondaryInherentActions.push_back(GUIDED_LIGHTNING);
 
@@ -53,22 +55,24 @@ void GameDataRepository::CreatePlayerCharacterTypes()
 	PlayerCharacterType valkyrie(
 		"Blue Mist",
 		"Valkyrie",
-		Bitmap::Load("ValkyrieUpdate.png"),
+		Bitmap::Load("Valkyrie.png"),
 		"A swift pegasus dedicated to protecting the throne and kingdom",
 		"Fast attacks, movement and flight",
 		75, 75, 75, 175,
-		HALBERD_SWING);
+		HALBERD_SWING,
+		XYPair<double>(96, 96), 50, 16);
 	valkyrie.secondaryInherentActions.push_back(HALBERD_PIERCE);
 	valkyrie.secondaryInherentActions.push_back(FLIGHT);
 
 	PlayerCharacterType archer(
 		"Swift Leaf",
 		"Archer",
-		Bitmap::Load("ArcherUpdate.png"),
+		Bitmap::Load("Archer.png"),
 		"A charismatic pegasus with impecable aim",
 		"Fast movement, long-ranged attacks and flight",
 		50, 150, 150, 50,
-		FIRED_ARROW);
+		FIRED_ARROW,
+		XYPair<double>(96, 96), 50, 16);
 	archer.secondaryInherentActions.push_back(TRIPLE_SHOT);
 	archer.secondaryInherentActions.push_back(GUIDED_ARROW);
 
@@ -141,6 +145,12 @@ void GameDataRepository::CreateAnimationTypes()
 	SpriteSheetAnimationType wallopAnim(wallop, false, 0.2, wallop->Height(),
 		wallop->Width()/wallop->Height());
 
+
+	auto rustlingGrave = Bitmap::Load("rustling grave.png");
+	SpriteSheetAnimationType graveAnim(rustlingGrave, true, 0.5, rustlingGrave->Height(),
+		rustlingGrave->Width()/rustlingGrave->Height());
+
+
 	SpriteSheetAnimationType temp;
 	spriteSheetAnimationTypes.insert(spriteSheetAnimationTypes.begin(), NUM_OF_ANIMATIONS, temp);
 	spriteSheetAnimationTypes[ANIM_GROUND_POUND] = groundPoundAnim;
@@ -157,6 +167,7 @@ void GameDataRepository::CreateAnimationTypes()
 	spriteSheetAnimationTypes[ANIM_SMALL_FLASH] = smallFlashAnim;
 	spriteSheetAnimationTypes[ANIM_SWING_ARC] = swingArcAnim;
 	spriteSheetAnimationTypes[ANIM_WALLOP] = wallopAnim;
+	spriteSheetAnimationTypes[ANIM_GRAVE] = graveAnim;
 
 }
 
@@ -207,21 +218,39 @@ void GameDataRepository::CreateAttackTypes()
 	attackTypes[GUIDED_ARROW] = guidedArrow;
 }
 
-void GameDataRepository::LoadNeededBitmaps()
+void GameDataRepository::CreateMonsterTypes()
 {
-	for(auto charType = playerCharacterTypes.begin(); 
-		charType != playerCharacterTypes.end(); charType++)
-	{
-		loadedBitmaps.push_back(charType->bitmap);
-	}
+	MonsterType skeleton;
 
-	for(auto animationType = spriteSheetAnimationTypes.begin(); animationType != spriteSheetAnimationTypes.end();
-		animationType++)
-	{
-		loadedBitmaps.push_back(animationType->bitmap);
-	}
+	skeleton.maxHealth = 20;
+	skeleton.maxEnergy = 100;
+	skeleton.defaultAttackIndex = SKULL_CHOMP;
+	skeleton.radius = 16;
+	skeleton.height = 50;
+	skeleton.startAltitude = 0;
+	//skeleton.bitmap.reset();
+	skeleton.bitmap = Bitmap::Load("Skeleton.png");
+	skeleton.imageWidth = 96; skeleton.imageHeight = 96;
+	skeleton.moveSpeed = 30;
+	skeleton.thinkCooldown = 6;
+	skeleton.aiTypeIndex = BASIC_MONSTER_AI;
 
-	for(auto attackType = attackTypes.begin(); attackType != attackTypes.end(); attackType++)
-	{
-	}
+	monsterTypes.insert(std::pair<int, MonsterType>(SPOOKY_BONES, skeleton));
+}
+
+void GameDataRepository::CreateSpawnerTypes()
+{
+	SpawnerType grave;
+	grave.damagedAnimationIndex = ANIM_GRAVE;
+	grave.durability = 100;
+	grave.idleAnimationIndex = ANIM_GRAVE;
+	grave.isMovementImpedingWall = false;
+	grave.monsterList.push_back(&monsterTypes[SPOOKY_BONES]);
+	grave.monsterSelectionTechnique = SPAWNER_MONSTER_SELECT_IS_RANDOM;
+	grave.spawnCooldownRate = 2.0;
+	grave.spawningAnimationIndex = ANIM_GRAVE;
+	grave.spawnLimit = 1;
+
+	spawnerTypes.insert(std::pair<int, SpawnerType>(SHALLOW_GRAVE, grave));
+
 }
