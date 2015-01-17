@@ -7,7 +7,7 @@
 #include "Tile.hpp"
 #include "Spawner.hpp"
 #include <algorithm>
-
+#include"Attack.hpp"
 
 #include "Bitmap.hpp"
 using namespace gauntlet; 
@@ -23,7 +23,6 @@ TestGameScreen::TestGameScreen()
 	
 
 	CreatePlayerCharactersFromPlayers();
-
 	if(playerCharacters.size() > 0)
 	{
 		app->controls.PollMousePosition();
@@ -35,7 +34,8 @@ TestGameScreen::TestGameScreen()
 	}
 
 	//Create test monster
-	Monster *newMonster = new Monster(XYPair<double>(playerCharacters[0]->GetPosition().x,playerCharacters[0]->GetPosition().y+400), DIR_DOWN, app->data.monsterTypes[SPOOKY_BONES]);
+	unsigned int id = objectField.GetNextCharacterReferenceID();
+	Monster *newMonster = new Monster(id, XYPair<double>(playerCharacters[0]->GetPosition().x,playerCharacters[0]->GetPosition().y+400), DIR_DOWN, app->data.monsterTypes[SPOOKY_BONES]);
 	objectField.Insert(newMonster);
 	monstersInView.push_back(newMonster);
 
@@ -44,6 +44,7 @@ TestGameScreen::TestGameScreen()
 	intervalBetweenMonsterSpawners = 3.0;
 	timeUntilNextSpawnerIsCreated = intervalBetweenMonsterSpawners;
 	
+	actionHUD = Bitmap::Load("action icons.png", false);
 }
 
 TestGameScreen::~TestGameScreen(){}
@@ -58,6 +59,7 @@ void TestGameScreen::HandleInput(ALLEGRO_EVENT &ev)
 	case ALLEGRO_EVENT_MOUSE_AXES:
 		app->allegro.TranslateMousePositionToBufferPosition(ev.mouse.x, ev.mouse.y);
 		app->controls.ReportMousePosition(ev.mouse.x, ev.mouse.y);
+		if(ev.mouse.dz != 0) app->controls.AdjustMouseZPosition(ev.mouse.dz>0);
 			break;
 		default:
 			app->controls.HandlePlayerControls(ev);
@@ -73,10 +75,8 @@ void TestGameScreen::Render(double alpha)
 		app->allegro.BUFFER_HEIGHT, 0, 0, 0);
 
 
-	//map.DrawCeilingLayerRegion(0, 0, app->allegro.BUFFER_WIDTH,
-		//app->allegro.BUFFER_HEIGHT, 0, 0, 0);
-
 	std::vector< GameCharacter* > gameCharacters;
+
 
 	for(auto sIter = spawnersInView.begin(); sIter != spawnersInView.end(); sIter++)
 	{
@@ -98,7 +98,30 @@ void TestGameScreen::Render(double alpha)
 		al_draw_filled_ellipse(shadow.x + shadow.w/2, shadow.y + shadow.h/2, 
 			shadow.w, shadow.h*(2.0/3.0), 
 			al_map_rgba(0,0,0,192));
-		//bitmap->Draw(imageSource.x, imageSource.y, imageBox.w, imageBox.h, imageBox.x, imageBox.y, imageFlags);
+	}
+
+
+	for(auto animation = animationsOnFloor.begin(); animation != animationsOnFloor.end(); animation++)
+	{
+		XYPair<double> center = animation->offset;
+		auto type = animation->animation.type;
+		auto imageBox = animation->animation.GetImageBox(center.x, center.y);
+		auto imageSource = animation->animation.ImageSource();
+		auto angle = animation->animation.rotation;
+
+		if(animation->characterIndexAnimationIsCenteredOn != -1)
+		{
+			auto character = objectField.GetCharacterFromID(animation->characterIndexAnimationIsCenteredOn);
+			if(character)
+			{
+				auto charPos = character->GetHitbox().Center();
+				imageBox.x += charPos.x;
+				imageBox.y += charPos.y;
+			}
+		}
+
+		type->bitmap->DrawRotated(imageSource.x, imageSource.y, imageBox.w, imageBox.h, imageBox.x+imageBox.w/2, imageBox.y+imageBox.h/2, 
+			imageBox.w/2, imageBox.h/2, angle);
 	}
 
 	map.DrawWallLayerRegion(0, 0, app->allegro.BUFFER_WIDTH,
@@ -114,39 +137,153 @@ void TestGameScreen::Render(double alpha)
 		auto imageFlags = character->ImageDrawingFlags();
 		//auto shadow = character->GetHitboxAtDeltaTime(alpha);
 
-
-		/*while(ceilingLayerVerticalDrawDistance+Tile::TILE_SIZE > imageBox.Y2())
-		{
-			map.DrawCeilingLayerRegion(0, ceilingLayerVerticalDrawDistance, app->allegro.BUFFER_WIDTH, Tile::TILE_SIZE,
-				0, ceilingLayerVerticalDrawDistance, 0);
-			//do
-			//{
-				//printf("IMAGE BOX: %f, Drawing From %f %f\n", imageBox.y, ceilingLayerVerticalDrawDistance, ceilingLayerVerticalDrawDistance+Tile::TILE_SIZE);
-				//map.DrawCeilingLayerRegion(0, ceilingLayerVerticalDrawDistance, app->allegro.BUFFER_WIDTH, Tile::TILE_SIZE,
-					//0, ceilingLayerVerticalDrawDistance, 0);
-					//ceilingLayerVerticalDrawDistance += Tile::TILE_SIZE;
-			//} while( ceilingLayerVerticalDrawDistance+Tile::TILE_SIZE < imageBox.y );
-			ceilingLayerVerticalDrawDistance+= Tile::TILE_SIZE;	
-		}*/
+		auto hitbox = (*charIter)->GetHitbox();
+		//al_draw_rectangle(hitbox.x, hitbox.y, hitbox.X2(), hitbox.Y2(), al_map_rgb(0,255,0), 2);
+		al_draw_rectangle(imageBox.x, imageBox.y, imageBox.X2(), imageBox.Y2(), al_map_rgb(0,255,0), 2);
 
 		bitmap->Draw(imageSource.x, imageSource.y, imageBox.w, imageBox.h, imageBox.x, imageBox.y, imageFlags);
-
-
 	}
-	while(ceilingLayerVerticalDrawDistance < app->allegro.BUFFER_HEIGHT)
+
+	for(auto animation = animationsInSky.begin(); animation != animationsInSky.end(); animation++)
 	{
-		map.DrawCeilingLayerRegion(0, ceilingLayerVerticalDrawDistance, app->allegro.BUFFER_WIDTH, Tile::TILE_SIZE,
-			0, ceilingLayerVerticalDrawDistance, 0);
-		ceilingLayerVerticalDrawDistance += Tile::TILE_SIZE;
+		XYPair<double> center = animation->offset;
+		auto type = animation->animation.type;
+		auto imageBox = animation->animation.GetImageBox(center.x, center.y);
+		auto imageSource = animation->animation.ImageSource();
+		auto angle = animation->animation.rotation;
+
+		if(animation->characterIndexAnimationIsCenteredOn != -1)
+		{
+			auto character = objectField.GetCharacterFromID(animation->characterIndexAnimationIsCenteredOn);
+			if(character)
+			{
+				auto charPos = character->GetHitbox().Center();
+				imageBox.x += charPos.x;
+				imageBox.y += charPos.y;
+			}
+		}
+
+		type->bitmap->DrawRotated(imageSource.x, imageSource.y, imageBox.w, imageBox.h, imageBox.x+imageBox.w/2, imageBox.y+imageBox.h/2, 
+			imageBox.w/2, imageBox.h/2, angle);
 	}
 
+	map.DrawCeilingLayerRegion(0, 0, app->allegro.BUFFER_WIDTH,
+		app->allegro.BUFFER_HEIGHT, 0, 0, 0);
 
+
+
+
+	for(auto attack = attacksInView.begin(); attack != attacksInView.end(); attack++)
+	{
+		auto bitmap = (*attack)->imageBitmap;
+		if(bitmap)
+		{
+			auto hitbox = (*attack)->GetHitboxAtDeltaTime(0);
+
+			auto imageSource = (*attack)->animation->ImageSource();
+			auto imageBox = (*attack)->animation->GetImageBox(hitbox.x + hitbox.w/2, hitbox.y + hitbox.h/2);
+
+			auto animation = (*attack)->animation;
+		
+			double half = animation->type->HALF_DIMENSION;
+
+			auto angle = (*attack)->GetFacing();
+
+			//bitmap->Draw(imageSource.x, imageSource.y, imageBox.w, imageBox.h, 
+				//imageBox.x, imageBox.y, imageFlags);
+			bitmap->DrawRotated(imageSource.x,imageSource.y, imageBox.w, imageBox.h, imageBox.Center().x, imageBox.Center().y,
+				imageBox.w/2, imageBox.h/2, 
+				angle);
+			al_draw_rectangle(hitbox.x, hitbox.y, hitbox.X2(), hitbox.Y2(), al_map_rgb(255,255,255), 2);
+		}
+		//else do nothing; some attacks have no animation at their position
+	}
+
+	RenderHUD();
 
 } 
+
+void TestGameScreen::RenderHUD()
+{
+		const ALLEGRO_COLOR EMPTY_BAR_COLOR = al_map_rgb(0,0,0);
+		const ALLEGRO_COLOR HEALTH_BAR_COLOR = al_map_rgb(255,0,0);
+		const ALLEGRO_COLOR ENERGY_BAR_COLOR = al_map_rgb(255,255,0);
+		const ALLEGRO_COLOR FONT_COLOR = al_map_rgb(255,255,255);
+
+
+		const double HUD_BAR_X = 100;
+		const double HUD_BAR_LENGTH = 300;
+		const double HUD_BAR_HEIGHT = 40;
+
+		const double HEALTH_BAR_Y = app->allegro.BUFFER_HEIGHT-120;
+		const double ENERGY_BAR_Y = HEALTH_BAR_Y+HUD_BAR_HEIGHT+10;
+		const double NAME_LINE_Y = HEALTH_BAR_Y-24;
+		const double CREDIT_LINE_Y = ENERGY_BAR_Y+HUD_BAR_HEIGHT+10;
+
+		const double ACTION_BAR_X = HUD_BAR_X + HUD_BAR_LENGTH + 50;
+		const int ACTIONS_PER_ROW_IN_IMG = 8;
+		const double ACTION_ICON_SIZE = 64;
+		double SECONDARY_ACTION_X = ACTION_BAR_X+ACTION_ICON_SIZE+10;
+
+		auto player = app->players.GetPlayer(1);
+
+		//health
+		al_draw_filled_rectangle(HUD_BAR_X, HEALTH_BAR_Y, HUD_BAR_X+HUD_BAR_LENGTH, HEALTH_BAR_Y+HUD_BAR_HEIGHT, 
+			EMPTY_BAR_COLOR);
+		al_draw_filled_rectangle(HUD_BAR_X, HEALTH_BAR_Y, HUD_BAR_X + 
+			(HUD_BAR_LENGTH * (player.health / player.maxHealth)), HEALTH_BAR_Y+HUD_BAR_HEIGHT, 
+			HEALTH_BAR_COLOR);
+
+		//energy
+		al_draw_filled_rectangle(HUD_BAR_X, ENERGY_BAR_Y, HUD_BAR_X+HUD_BAR_LENGTH, ENERGY_BAR_Y+HUD_BAR_HEIGHT, 
+			EMPTY_BAR_COLOR);
+		al_draw_filled_rectangle(HUD_BAR_X, ENERGY_BAR_Y, HUD_BAR_X + 
+			(HUD_BAR_LENGTH * ( player.energy / player.maxEnergy)), ENERGY_BAR_Y+HUD_BAR_HEIGHT, 
+			ENERGY_BAR_COLOR);
+
+		//name
+		app->data.fonts[MESSAGE_FONT].DrawTxt(HUD_BAR_X, NAME_LINE_Y, TEXT_ALIGN_LEFT,
+			FONT_COLOR.r, FONT_COLOR.g, FONT_COLOR.b, FONT_COLOR.a, player.name.c_str());
+
+		app->data.fonts[MESSAGE_FONT].DrawTxtf(HUD_BAR_X, CREDIT_LINE_Y, TEXT_ALIGN_LEFT,
+			FONT_COLOR.r, FONT_COLOR.g, FONT_COLOR.b, FONT_COLOR.a, "%05d BITS", player.credit);
+
+		//action hud
+		auto mainAttack = player.characterType->mainAttack;
+		double actionSX = (mainAttack.iconIndex%ACTIONS_PER_ROW_IN_IMG)*ACTION_ICON_SIZE;
+		double actionSY = (mainAttack.iconIndex/ACTIONS_PER_ROW_IN_IMG)*ACTION_ICON_SIZE;
+		actionHUD->Draw(actionSX, actionSY, ACTION_ICON_SIZE, ACTION_ICON_SIZE,
+			ACTION_BAR_X, HEALTH_BAR_Y);
+		al_draw_rectangle(ACTION_BAR_X, HEALTH_BAR_Y, ACTION_BAR_X+ACTION_ICON_SIZE,
+			HEALTH_BAR_Y+ACTION_ICON_SIZE, al_map_rgb(0,0,0), 4);
+		
+		for(auto actionIter = player.characterType->secondaryInherentActions.begin();
+			actionIter != player.characterType->secondaryInherentActions.end();
+			actionIter++)
+		{
+			int action = (*actionIter).iconIndex;
+			double actionSX = (action%ACTIONS_PER_ROW_IN_IMG)*ACTION_ICON_SIZE;
+			double actionSY = (action/ACTIONS_PER_ROW_IN_IMG)*ACTION_ICON_SIZE;
+			actionHUD->Draw(actionSX, actionSY, ACTION_ICON_SIZE, ACTION_ICON_SIZE,
+			SECONDARY_ACTION_X,
+			HEALTH_BAR_Y);
+			SECONDARY_ACTION_X += ACTION_ICON_SIZE+10;
+		}
+		SECONDARY_ACTION_X = ACTION_BAR_X+ACTION_ICON_SIZE+10 + ( (ACTION_ICON_SIZE+10) * actionBar.selectedNode);
+		
+		al_draw_rectangle(SECONDARY_ACTION_X, HEALTH_BAR_Y, SECONDARY_ACTION_X+ACTION_ICON_SIZE,
+			HEALTH_BAR_Y+ACTION_ICON_SIZE, al_map_rgb(255,255,255), 4);
+		/*al_draw_rectangle(SECONDARY_ACTION_X, HEALTH_BAR_Y, SECONDARY_ACTION_X+ACTION_ICON_SIZE,
+			HEALTH_BAR_Y+ACTION_ICON_SIZE, FONT_COLOR, 2);*/
+}
+
 void TestGameScreen::Update()
 {
+	RebuildActionBar();
+	
 	UpdateCharactersFromPlayerInput();
 	UpdateMonstersFromAI();
+
 	PerformCollisionsForCharacters();
 
 	CalculateTilesInView();
@@ -154,14 +291,15 @@ void TestGameScreen::Update()
 
 
 	/* Update attacks (move, animate, collide) */
+	UpdateAttacks();
+	UpdateAnimations();
 
 	/* Update Spawners and ObjectField objects */
 	UpdateMonsterSpawners();
 	CreateSpawners();
 
-	/* Update debris and lose dungeon animations, etc */
+	/* Update debris*/
 	/* Update any gates */
-	/* Update action bar */
 }
 
 void TestGameScreen::UpdateCharactersFromPlayerInput()
@@ -170,7 +308,7 @@ void TestGameScreen::UpdateCharactersFromPlayerInput()
 	{
 		/* Directional facing */
 		auto character = (*ch);
-		if(!character->IsFacingAngleLocked())
+		if(!character->IsRotationLockedFromAnAttack())
 		{
 			auto charPos = character->GetPosition();
 			auto angleToMouse = app->controls.GetAngleToMouse(charPos.x, charPos.y);
@@ -181,59 +319,80 @@ void TestGameScreen::UpdateCharactersFromPlayerInput()
 		auto id = character->GetPlayer().ID;
 		auto controls = app->controls.GetPlayerInput(id);
 
-		/* Update desired velocity */
-		if(!character->isMovementLocked())
+		XYPair<double> velocity;
+		if(!character->IsMovementLockedFromAnAttack())
 		{
-			double MULTIPLIER = 1.7;
+
+
+			double MULTIPLIER = 1.2;
+			double SPEED_BASE = 50;
 			auto player = character->GetPlayer();
 			auto initialVelocity = controls->GetMoveVector();
-			auto speed = double(app->players.GetPlayer(1).SPD() * MULTIPLIER) / app->TPS;
-			//auto speed = (app->players.GetPlayer(1).SPD() * app->dt) + speedBase;
-			//speed = (200 * 1/20) + speedBase
+			auto speed = double( (app->players.GetPlayer(1).SPD() + SPEED_BASE) * MULTIPLIER) / app->TPS;
 
 
 			initialVelocity.x *= speed;
 			initialVelocity.y *= speed;
-
+			velocity.x += initialVelocity.x;
+			velocity.y += initialVelocity.y;
+			character->AddStepsToAnimation( speed*1.25 / app->TPS);
 			
-			if(character->GetWasTileBlocked() )
-			{
-				character->SetWasTileBlocked(false);
 
-				auto playerHitbox = character->GetHitbox();
-
-				const double MAX_ADJUST_DISTANCE = 0.2;
-				//Adjust so it's centering on closest tile
-				XYPair<double> closestTileCenterPos = XYPair<double>( floor(playerHitbox.Center().x / Tile::TILE_SIZE) * Tile::TILE_SIZE, 
-					floor(playerHitbox.Center().y / Tile::TILE_SIZE) * Tile::TILE_SIZE);
-
-				XYPair<double> differenceFromTile(closestTileCenterPos.x - playerHitbox.x,
-					closestTileCenterPos.y - playerHitbox.y);
-				if( differenceFromTile.x > MAX_ADJUST_DISTANCE) differenceFromTile.x = MAX_ADJUST_DISTANCE;
-				else if( differenceFromTile.x < -MAX_ADJUST_DISTANCE) differenceFromTile.x = -MAX_ADJUST_DISTANCE;
-				if( differenceFromTile.y > MAX_ADJUST_DISTANCE) differenceFromTile.y = MAX_ADJUST_DISTANCE;
-				else if( differenceFromTile.y < -MAX_ADJUST_DISTANCE) differenceFromTile.y = -MAX_ADJUST_DISTANCE;
-
-
-				initialVelocity.x += differenceFromTile.x;
-				initialVelocity.y += differenceFromTile.y;
-			}
-
-			character->AddStepsToAnimation(speed / app->TPS);
-
-			character->SetVelocity(initialVelocity.x, initialVelocity.y);
 		}
-		else character->SetVelocity(0,0);
+
+		auto forcedVelocity = character->GetForcedVelocity();
+		velocity.x += forcedVelocity.x;
+		velocity.y += forcedVelocity.y;
+		character->SetForcedVelocity(0,0);
+		character->SetVelocity(velocity.x, velocity.y);
+
 
 		/* Respond to actions */
 		if(controls->buttons[USE_MAIN_ITEM].IsPressed())
-		{}
+		{
+			Player &player = character->GetPlayer();
+			int attackIndex = player.characterType->mainAttack.typeIndex;
+			auto attackType = &app->data.attackTypes[attackIndex];
+
+			CreateNewAttack(character, player.STR(), attackType);
+		}
 		if(controls->buttons[USE_SEC_ITEM].IsPressed())
-		{}
+		{
+			auto action = actionBar.nodes[actionBar.selectedNode].action;
+			//printf("Performing action %d:%d\n", action.actionType, action.typeIndex);
+			if(action.actionType == ATTACK_ACTION_TYPE)
+			{
+				Player &player = character->GetPlayer();
+				int attackIndex = action.typeIndex;
+				auto attackType = &app->data.attackTypes[attackIndex];
+				CreateNewAttack(character, player.STR(), attackType);
+			}
+			else if(action.actionType == TRIPLE_SHOT_ACTION)
+			{
+
+			}
+			else if(action.actionType == ITEM_ACTION_TYPE)
+			{
+				
+			}
+		}
 		if(controls->buttons[INC_SECONDARY].IsPressed())
-		{}
+		{
+			actionBar.selectedNode++;
+			if(actionBar.selectedNode >= (int)actionBar.nodes.size())
+			{
+				actionBar.selectedNode = 0;
+			}
+		}
 		if(controls->buttons[DEC_SECONDARY].IsPressed())
-		{}
+		{
+			actionBar.selectedNode--;
+			if(actionBar.selectedNode < 0)
+			{
+				if(!actionBar.nodes.empty()) actionBar.selectedNode = (int)actionBar.nodes.size()-1;
+				else actionBar.selectedNode = 0;
+			}
+		}
 	}
 }
 
@@ -352,14 +511,14 @@ void TestGameScreen::PerformCollisionsForCharacters()
 				{
 					if(velocity.y>0 && tileBox.IsHorizontalLineIntersecting(hitbox.x+1, hitbox.X2()-1, hitbox.Bottom()) ) //Going Down
 					{
-						character->SetWasTileBlocked(true);
+						//character->SetWasTileBlocked(true);
 						velocity.y = tileBox.Top() - hitbox.Bottom();
 						if(velocity.y>0) character->SetYVelocity( velocity.y );
 						else character->SetYVelocity(0);
 					}
 					if(velocity.y<0 && tileBox.IsHorizontalLineIntersecting(hitbox.x+1, hitbox.X2()-1, hitbox.Top()) ) //Going Up
 					{
-						character->SetWasTileBlocked(true);
+						//character->SetWasTileBlocked(true);
 						velocity.y = tileBox.Bottom() - hitbox.Top();
 						if(velocity.y<0) character->SetYVelocity( velocity.y );
 						else character->SetYVelocity(0);
@@ -374,14 +533,14 @@ void TestGameScreen::PerformCollisionsForCharacters()
 				{
 					if(velocity.x>0 && tileBox.IsVerticalLineIntersecting(hitbox.Right(), hitbox.y+1, hitbox.Y2()-1) ) //Going Right
 					{
-						character->SetWasTileBlocked(true);
+						//character->SetWasTileBlocked(true);
 						velocity.x = tileBox.Left() - hitbox.Right();
 						if( velocity.x>0 ) character->SetXVelocity( velocity.x );
 						else character->SetXVelocity(0);
 					}
 					if(velocity.x<0 && tileBox.IsVerticalLineIntersecting(hitbox.Left(), hitbox.y+1, hitbox.Y2()-1) ) //Going Left
 					{
-						character->SetWasTileBlocked(true);
+						//character->SetWasTileBlocked(true);
 						velocity.x = tileBox.Right() - hitbox.Left();
 						if( velocity.x<0) character->SetXVelocity( velocity.x );
 						else character->SetXVelocity(0);
@@ -409,6 +568,7 @@ void TestGameScreen::PerformCollisionsForCharacters()
 
 	}
 }
+
 void TestGameScreen::CreatePlayerCharactersFromPlayers()
 {
 	auto startPositions = map.GetPlayerStartPositions();
@@ -421,9 +581,9 @@ void TestGameScreen::CreatePlayerCharactersFromPlayers()
 		if(player.isPlaying)
 		{
 
-			PlayerCharacter *newPC = new PlayerCharacter(startPositions[startPos], player);
+			unsigned int id = objectField.GetNextCharacterReferenceID();
+			PlayerCharacter *newPC = new PlayerCharacter(id, startPositions[startPos], player);
 			objectField.Insert(newPC);
-
 			playerCharacters.push_back(newPC);
 
 			startPos++;
@@ -463,24 +623,51 @@ void TestGameScreen::UpdateMonstersFromAI()
 	for(auto mon = monstersInView.begin(); mon != monstersInView.end(); mon++)
 	{
 		(*mon)->DecrementThinkCooldown();
-		if((*mon)->IsAbleToThink())
-		{
-			int monsterAi = (*mon)->GetAiType();
-			if(monsterAi == BASIC_MONSTER_AI)
-			{
-				XYPair<double> position = (*mon)->GetPosition();
-				auto playerID = GetPositionOfClosestPlayer(position);
-				if(playerID != -1)
-				{
-					(*mon)->LookAt(position);
-				} //else no player found
 
-				(*mon)->SetVelocityToForward();
-				(*mon)->AddStepSpeedToAnimation();
-				(*mon)->UpdateAnimation();
+		if(!(*mon)->IsStunTimeLeft())
+		{
+			if((*mon)->IsAbleToThink())
+			{
+				int monsterAi = (*mon)->GetAiType();
+				if(monsterAi == BASIC_MONSTER_AI)
+				{
+					//Rotation
+					auto facing = (*mon)->GetFacing();
+					XYPair<double> position = (*mon)->GetPosition();
+					auto playerID = GetPositionOfClosestPlayer(position);
+					if(playerID != -1)
+					{
+						(*mon)->LookAt(position);
+					} //else no player found
+
+					//Movement
+					(*mon)->SetVelocityToForward();
+					(*mon)->AddStepSpeedToAnimation();
+
+					//Reset instead of preventing rotation at all so that movement isn't necessarily affected
+					if( (*mon)->IsRotationLockedFromAnAttack())
+					{
+						(*mon)->SetFacingAngle(facing);
+					}
+				}
+
+
+				(*mon)->ResetThinkCooldown();
 			}
-			(*mon)->ResetThinkCooldown();
 		}
+		else
+		{
+			(*mon)->SetVelocity(0,0);
+			(*mon)->DecreaseStunTime(app->dt);
+		}
+
+		if( (*mon)->IsMovementLockedFromAnAttack())
+		{
+			(*mon)->SetVelocity(0,0);
+		}
+		auto forcedVelocity = (*mon)->GetForcedVelocity();
+		(*mon)->AddForcedVelocityToVelocity();
+
 		(*mon)->UpdateAnimation();
 	}
 }
@@ -518,7 +705,6 @@ void TestGameScreen::FindMonstersAndSpawnersInView()
 						&& (*monsterIterator)->GetHitbox().IsOverlapping(cameraOffset) )
 					{
 
-						//monstersInRange.push_back( (*monsterIterator)); 
 						monstersInView.push_back( (*monsterIterator));
 					}
 					monsterIterator++;
@@ -557,9 +743,11 @@ void TestGameScreen::UpdateMonsterSpawners()
 				{
 					XYPair<double> spawnLocation = spawner->GetCenterOfTile();
 					//spawn on the spawner
-					Monster *newMonster = new Monster(spawnLocation, DIR_DOWN, *monsterType);
+					unsigned int id = objectField.GetNextCharacterReferenceID();
+					Monster *newMonster = new Monster(id, spawnLocation, DIR_DOWN, *monsterType);
 					objectField.Insert(newMonster);
 					monstersInView.push_back(newMonster);
+
 					wasMonsterSpawned = true;
 					spawner->ResetSpawnCooldown();
 					spawner->DecrementSpawnsLeft();
@@ -648,7 +836,8 @@ void TestGameScreen::UpdateMonsterSpawners()
 					if(!possibleSpawnLocations.empty())
 					{
 						auto spawnLocation = possibleSpawnLocations[rand()%possibleSpawnLocations.size()];
-						Monster *newMonster = new Monster(spawnLocation, DIR_DOWN, *monsterType);
+						unsigned int id = objectField.GetNextCharacterReferenceID();
+						Monster *newMonster = new Monster(id, spawnLocation, DIR_DOWN, *monsterType);
 						objectField.Insert(newMonster);
 						monstersInView.push_back(newMonster);
 						wasMonsterSpawned = true;
@@ -659,16 +848,17 @@ void TestGameScreen::UpdateMonsterSpawners()
 			} //if spawns left is not -1
 		} //if time to spawn monster
 
-			if((*monsterSpawnerIter)->GetSpawnsLeft() > 0)
-			{
-				monsterSpawnerIter++;
-			}
-			else //there are no spawns left for this spawner, destroy it
-			{
-				monsterSpawnerIter = spawnersInView.erase(monsterSpawnerIter);
-			}
 
-		}//iterating over each monster spawner in view
+		if((*monsterSpawnerIter)->GetSpawnsLeft() > 0)
+		{
+			monsterSpawnerIter++;
+		}
+		else //there are no spawns left for this spawner, destroy it
+		{
+			monsterSpawnerIter = spawnersInView.erase(monsterSpawnerIter);
+		}
+
+	}//iterating over each monster spawner in view
 }
 
 void TestGameScreen::CreateSpawners()
@@ -724,4 +914,400 @@ bool TestGameScreen::FoundOpenTileForMonsterSpawner(int &x, int &y)
 	//else no tile was found
 	
 	return wasTileFound;
+}
+
+void TestGameScreen::RebuildActionBar()
+{
+	actionBar.nodes.clear();
+	auto player = app->players.GetPlayer(1);
+	for(auto i = player.characterType->secondaryInherentActions.begin();
+		i != player.characterType->secondaryInherentActions.end(); i++)
+	{
+		ActionBarNode node;
+		node.action = (*i);
+		actionBar.nodes.push_back(node);
+	}
+	for(auto i = player.inventory.begin(); i != player.inventory.end(); i++)
+	{
+		//TODO: add inventory to actionBar as ITEM_TYPE nodes
+	}
+
+}
+
+void TestGameScreen::CreateNewAttack(GameCharacter *attacker, double attackerPower, AttackType *type)
+{
+	printf("ATTACK!\n");
+	
+	//position of attack
+	auto position = attacker->GetHitbox().Center();
+
+	//get attack direction
+	double angle = 0 - attacker->GetFacing();
+
+	//TODO: adjust position based on attack path type
+
+
+
+	if(type->PATH_TYPE == PATH_FORWARD)
+	{
+		//move forward a little
+	}
+	else if(type->PATH_TYPE == PATH_AROUND_CHARACTER)
+	{
+		//set to a position so that it moves the character across their front
+		auto attackerHitbox = attacker->GetHitbox();
+		
+		position.x += attackerHitbox.w * cos(angle);
+		position.y += attackerHitbox.h * sin(angle);
+
+	}
+	else if(type->PATH_TYPE == PATH_NON_MOVING_LINE)
+	{
+
+		//Find further position not colliding with anything
+	}
+
+	
+	//calculate damage and speed
+	double speed = type->SPEED_MULTIPLIER * app->TPS;
+	double damage = type->DAMAGE_MULTIPLIER * attackerPower;
+	
+
+
+	//get animation (if there is one)
+	SpriteSheetAnimation *animation = NULL;
+
+	if(type->ANIMATION_ON_PROJECTILE_INDEX != 0 && 
+		(int)app->data.spriteSheetAnimationTypes.size() > type->ANIMATION_ON_PROJECTILE_INDEX)
+	{
+		animation = new SpriteSheetAnimation(&app->data.spriteSheetAnimationTypes[type->ANIMATION_ON_PROJECTILE_INDEX]);
+	}
+
+	//get bitmap
+	std::shared_ptr<Bitmap> bitmap = NULL;
+	if(animation)
+	{
+		bitmap = animation->type->bitmap;
+	}
+
+
+
+	//Adjust
+	position.x -= type->SIZE/2;
+	position.y -= type->SIZE/2;
+	
+	auto attackerId = attacker->GetID();
+
+	Attack *newAttack = new Attack(attackerId, position, type->SIZE, angle, type, damage, speed, bitmap, 
+		animation);
+	attacksInView.push_back(newAttack);
+
+	if(attacker)
+	{
+		if(type->ATTRIBUTES & PREVENTS_MOVEMENT) attacker->LockMovementFromAnAttack();
+		if(type->ATTRIBUTES & PREVENTS_ROTATING) attacker->LockRotationFromAnAttack();
+	}
+
+
+	int attackerAnimationIndex = newAttack->type->ANIMATION_ON_ATTACKER_INDEX;
+	if(attackerAnimationIndex != NO_ANIMATION && (int)app->data.spriteSheetAnimationTypes.size() > attackerAnimationIndex)
+	{
+		//auto position = attacker->GetHitbox().Center();
+		XYPair<double> position;
+		auto animation = (&app->data.spriteSheetAnimationTypes[attackerAnimationIndex]);
+
+		AddAnimationToScreen(position, angle, animation, attacker);
+	}
+}
+
+void TestGameScreen::UpdateAnimations()
+{
+	auto floorAnimation = animationsOnFloor.begin();
+	while( floorAnimation != animationsOnFloor.end())
+	{
+		floorAnimation->animation.AddTimeToAnimation(app->dt);
+		if(floorAnimation->animation.isDone)
+		{
+			floorAnimation = animationsOnFloor.erase(floorAnimation);
+		}
+		else floorAnimation++;
+	}
+
+	auto skyAnimation = animationsInSky.begin();
+	while( skyAnimation != animationsInSky.end())
+	{
+		skyAnimation->animation.AddTimeToAnimation(app->dt);
+		if(skyAnimation->animation.isDone)
+		{
+			skyAnimation = animationsInSky.erase(skyAnimation);
+		}
+		else skyAnimation++;
+	}
+}
+
+void TestGameScreen::AddAnimationToScreen(XYPair<double> position, double angle, SpriteSheetAnimationType *type, GameCharacter *character)
+{
+
+	if(type)
+	{
+		auto characterId = -1;
+		if(character)
+		{
+			characterId = character->GetID();
+		}
+
+		if(type->IS_ON_FLOOR_LAYER)
+		{	
+			animationsOnFloor.push_back(
+				AnimationOnGameCharacter(type, angle, characterId, position));
+		}
+		else
+		{
+			animationsInSky.push_back(
+				AnimationOnGameCharacter(type, angle, characterId, position));
+		}
+	}
+}
+
+void TestGameScreen::UpdateAttacks()
+{
+	for(auto attackIter = attacksInView.begin(); attackIter != attacksInView.end(); /* attackIter++ */)
+	{
+		/* UPDATE */
+		auto attack = (*attackIter);
+
+		auto attributes = attack->type->ATTRIBUTES;
+		auto attackerID = attack->attackerId;
+		GameCharacter *attacker = objectField.GetCharacterFromID(attackerID);
+		if(attack->animation)	attack->animation->AddTimeToAnimation(app->dt);
+		attack->DecrementTimeLeft();
+
+		/* COLLISION */
+		//test for collision with other attacks, game characters that aren't the attacker and walls in that order
+		for(auto otherAttack = attacksInView.begin(); otherAttack != attacksInView.end(); otherAttack++)
+		{
+			auto other = (*otherAttack);
+			//If it hits another attack, that attack should also stop existing as necessary
+			if(other != attack && attack->hitbox.IsOverlapping(other->hitbox))
+			{
+				if(attributes & DESTROYED_ON_HIT) attack->ZeroOutTimeLeft();
+				if(other->type->ATTRIBUTES & DESTROYED_ON_HIT) other->ZeroOutTimeLeft();
+			}
+		}
+
+		//compare position with monsters and characters nearby
+		auto tilesOverlapped = objectField.GetTilesInRange(attack->hitbox);
+
+		const size_t ARBITRARY_REASONABLE_MAX_CHARACTERS_OVERLAPPING = 12;
+		std::vector< Monster *> monsters;
+		std::vector< PlayerCharacter *> playerCharacters;
+
+		monsters.reserve(ARBITRARY_REASONABLE_MAX_CHARACTERS_OVERLAPPING);
+		playerCharacters.reserve(app->players.MAX_PLAYERS);
+
+		for(auto tileIter = tilesOverlapped.begin(); tileIter != tilesOverlapped.end(); tileIter++)
+		{
+			auto monstersInCell = objectField.collisionGrid[tileIter->x][tileIter->y].monstersOverlappingCell;
+			for(auto monsterIter = monstersInCell.begin(); monsterIter != monstersInCell.end(); monsterIter++)
+			{
+				if(std::find(monsters.begin(), monsters.end(), (*monsterIter)) == monsters.end())
+				{
+					monsters.push_back((*monsterIter));
+				}
+			}
+
+			auto playersInCell = objectField.collisionGrid[tileIter->x][tileIter->y].playersOverlappingCell;
+			for(auto playerCharacterIter = playersInCell.begin(); playerCharacterIter != playersInCell.end(); playerCharacterIter++)
+			{
+				if(std::find(playerCharacters.begin(), playerCharacters.end(), (*playerCharacterIter)) != playerCharacters.end())
+				{
+					playerCharacters.push_back((*playerCharacterIter));
+				}
+			}
+		}
+
+		//Has a monster been hit
+		for(auto monster = monsters.begin(); monster != monsters.end(); monster++)
+		{
+			if( (*monster) != attacker) //stop hitting yourself
+			{
+				auto monsterHitbox = (*monster)->GetHitbox();
+				if(attack->hitbox.IsOverlapping(monsterHitbox))
+				{
+					//damage the monster 
+					(*monster)->DecreaseHealth(attack->damage);
+					if(attack->type->ANIMATION_ON_ATTACKED_INDEX != NO_ANIMATION)
+					{
+						SpriteSheetAnimationType *type = &(app->data.spriteSheetAnimationTypes[attack->type->ANIMATION_ON_ATTACKED_INDEX]);
+						
+						auto position = (*monster)->GetHitbox().Center();
+						position.x -= attack->hitbox.Center().x;
+						position.y -= attack->hitbox.Center().y;						
+						AddAnimationToScreen(position, attack->facingAngle, type, (*monster));
+					}
+
+					//if it should knock back
+					if(attributes & KNOCKS_BACK)
+					{
+						auto attackVelocity = attack->GetVelocity();
+						(*monster)->SetForcedVelocity(attackVelocity.x, attackVelocity.y);
+					}
+					//if it should stun
+					if(attributes & WILL_STUN)
+					{
+						if(!(*monster)->IsStunTimeLeft())
+						{
+							(*monster)->SetStunTime(1.0);
+						}
+					}
+					//if attack should be destroyed
+					if(attributes & DESTROYED_ON_HIT)
+					{
+						attack->ZeroOutTimeLeft();
+					}
+				}
+				//else it didn't hit, continue
+			}
+		}
+
+		//Has a player been hit
+		for(auto player = playerCharacters.begin(); player != playerCharacters.end(); player++)
+		{
+			if( (*player)!= attacker)
+			{
+				auto playerHitbox = (*player)->GetHitbox();
+				if(attack->hitbox.IsOverlapping(playerHitbox))
+				{
+					//damage the player
+					if(attack->type->ANIMATION_ON_ATTACKED_INDEX != NO_ANIMATION)
+					{
+						SpriteSheetAnimationType *type = &(app->data.spriteSheetAnimationTypes[attack->type->ANIMATION_ON_ATTACKED_INDEX]);
+						
+						auto position = playerHitbox.Center();
+						position.x -= attack->hitbox.Center().x;
+						position.y -= attack->hitbox.Center().y;						
+						AddAnimationToScreen(position, attack->facingAngle, type, (*player));
+					}
+
+					//if it should knock back
+					if(attributes & KNOCKS_BACK)
+					{
+						auto attackVelocity = attack->GetVelocity();
+						(*player)->SetForcedVelocity(attackVelocity.x, attackVelocity.y);
+					}
+					//if it should stun
+					if(attributes & WILL_STUN)
+					{
+						if(!(*player)->IsStunTimeLeft())
+						{
+							(*player)->SetStunTime(1.0);
+						}
+					}
+					//if attack should be destroyed
+					if(attributes & DESTROYED_ON_HIT)
+					{
+						attack->ZeroOutTimeLeft();
+					}
+				}
+			}
+		}
+
+
+		//Check if it's hit a wall
+		//non-moving line attacks are hitting a wall by definition
+		if(attack->type->PATH_TYPE != PATH_NON_MOVING_LINE)
+		{
+			for(auto tileXY = tilesOverlapped.begin(); tileXY != tilesOverlapped.end(); tileXY++)
+			{
+				if(map.IsThereAWallAt(tileXY->x, tileXY->y))
+				{
+					//it hit a wall so we destroy it
+					attack->ZeroOutTimeLeft();
+				}
+				//else continue
+			}
+		}
+
+
+		//attack is melee
+		if(attributes & IS_MELEE)
+		{
+			if(attacker) //move with the player
+			{
+				//add velocity to melee
+				auto attackersVelocity = attacker->GetVelocity();
+				
+				attack->lastPosition.x += attackersVelocity.x;
+				attack->lastPosition.y += attackersVelocity.y;
+				attack->hitbox.x += attackersVelocity.x;
+				attack->hitbox.y += attackersVelocity.y;
+			}
+			else //attacker couldn't be found on the map
+			{
+				//delete attack because it's melee it relies on the attacker being exist
+				attack->ZeroOutTimeLeft();
+			}
+		}
+
+		//moves in attackers facing direction
+		if(attributes & MOVES_IN_ATTACKERS_FACING_DIRECTION)
+		{
+			if(attacker)
+			{
+				auto facing = attacker->GetFacing();
+				attack->SetFacing(-facing);
+			}
+			//else attack doesn't exist, attack isn't necessarily destroyed though
+		}
+
+		/* MOVE */
+		if(attack->type->PATH_TYPE == PATH_FORWARD)
+		{
+			//move forward
+			double distance = (attack->type->SPEED_MULTIPLIER * attack->speed/ app->TPS);
+			XYPair<double> velocity;
+			velocity.x = distance * cos(attack->facingAngle);
+			velocity.y = distance * sin(attack->facingAngle);
+
+			attack->lastPosition.x = attack->hitbox.x;
+			attack->lastPosition.y = attack->hitbox.y;
+
+			attack->hitbox.x += velocity.x;
+			attack->hitbox.y += velocity.y;
+		}
+		else if(attack->type->PATH_TYPE == PATH_AROUND_CHARACTER)
+		{
+			if(attacker)
+			{
+				double distance = (attack->type->SPEED_MULTIPLIER * attack->speed/ app->TPS);
+				auto attackerCenter = attacker->GetHitbox().Center();
+				auto attackCenter = attack->hitbox.Center();
+				
+				//distance to attack
+				
+				XYPair<double> difference(attackCenter.x-attackerCenter.x, attackCenter.y-attackerCenter.y);
+				double angleToAttack = atan2(difference.y, difference.x);
+
+				//this probably works
+				XYPair<double> newPosition( attackCenter.x + distance*cos(angleToAttack),
+					attackCenter.y - distance*sin(angleToAttack));
+
+
+			}
+		} //else line which doesn't move
+
+		if(attack->timeLeft != 0)
+		{
+			attackIter++;
+		}
+		else
+		{
+			attackIter = attacksInView.erase(attackIter);
+			if(attacker)
+			{
+				if(attributes & PREVENTS_MOVEMENT) attacker->UnlockMovementFromAnAttack();
+				if(attributes & PREVENTS_ROTATING) attacker->UnlockRotationFromAnAttack();
+			}
+		}
+	} //for each attack
 }

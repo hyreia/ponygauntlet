@@ -9,6 +9,7 @@
 #include "SpriteSheetAnimation.hpp"
 #include "Monster.hpp"
 #include "Spawner.hpp"
+#include "Font.hpp"
 
 namespace gauntlet
 {
@@ -29,12 +30,14 @@ struct GameDataRepository
 	std::map<int, AttackType> attackTypes;
 	std::map<int, MonsterType>			monsterTypes;
 	std::map<int, SpawnerType> spawnerTypes;
+	std::map<int, Font> fonts;
 private:
 	void CreatePlayerCharacterTypes();
 	void CreateAnimationTypes();
 	void CreateAttackTypes();
 	void CreateSpawnerTypes();
 	void CreateMonsterTypes();
+	void CreateFonts();
 
 };
 

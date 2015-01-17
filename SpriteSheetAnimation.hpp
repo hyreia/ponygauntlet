@@ -45,24 +45,37 @@ struct SpriteSheetAnimationType
 		bool _willLoop,
 		double _secondsPerFrame,
 		double _dimension,
-		int _num_of_frames):
+		int _num_of_frames,
+		bool _isDirectional = false,
+		bool _isOnFloorLayer = false):
 	bitmap(_bitmap),
 	WILL_LOOP(_willLoop),
 	SECONDS_PER_FRAME(_secondsPerFrame),
 	HALF_DIMENSION(_dimension/2),
-	NUM_OF_FRAMES(_num_of_frames)
+	NUM_OF_FRAMES(_num_of_frames),
+	IS_DIRECTIONAL(_isDirectional),
+	IS_ON_FLOOR_LAYER(_isOnFloorLayer)
 	{}
+
 	std::shared_ptr<Bitmap> bitmap;
 	bool WILL_LOOP;
 	double SECONDS_PER_FRAME;
 	double HALF_DIMENSION; //width == height
 	int NUM_OF_FRAMES;
 
+	/* True if animation is dependent on target's direction (is rotated),
+	value is ignored and always true for the animation representing an attack */
+	bool IS_DIRECTIONAL;
+
+	/* True if drawn on layer below game characters, ignored when representing an attack */
+	bool IS_ON_FLOOR_LAYER;
+
 	SpriteSheetAnimationType():
 	WILL_LOOP(false),
-	SECONDS_PER_FRAME(0.0),
-	HALF_DIMENSION(0),
-	NUM_OF_FRAMES(0){}
+	SECONDS_PER_FRAME(77777.0),
+	HALF_DIMENSION(777),
+	bitmap(NULL),
+	NUM_OF_FRAMES(777){}
 };
 
 struct SpriteSheetAnimation
@@ -70,14 +83,20 @@ struct SpriteSheetAnimation
 	SpriteSheetAnimationType *type;
 	int currentFrame;
 	double timeInCurrentFrame;
+	bool isDone;
+	double rotation;
 
-	SpriteSheetAnimation(SpriteSheetAnimationType *_type):
+	SpriteSheetAnimation(SpriteSheetAnimationType *_type, double _rotation = 0.0):
 	currentFrame(0),
 	timeInCurrentFrame(0),
-	type(_type)
-	{}
+	type(_type),
+	isDone(false),
+	rotation(0.0)
+	{
+		if(type->IS_DIRECTIONAL) rotation = _rotation;
+	}
 
-	inline Rect<double> GetImageBox(double centerX, double centerY)
+	Rect<double> GetImageBox(double centerX, double centerY)
 	{
 		auto half = type->HALF_DIMENSION;
 
@@ -88,7 +107,7 @@ struct SpriteSheetAnimation
 		return ret;
 	}
 
-	inline void AddTimeToAnimation(double delta)
+	void AddTimeToAnimation(double delta)
 	{
 		timeInCurrentFrame += delta;
 		if(timeInCurrentFrame >= type->SECONDS_PER_FRAME)
@@ -108,21 +127,39 @@ struct SpriteSheetAnimation
 				currentFrame = 0;
 			}
 			// else it doesn't loop
+			else
+			{
+				isDone = true;
+			}
 		}
 	}
 
-	inline XYPair<double> ImageSource()
+	XYPair<double> ImageSource()
 	{
 		XYPair<double> ret;
 		auto width = type->HALF_DIMENSION*2;
 		ret.x = currentFrame*width;
-		//ret.y = 0;
+		ret.y = 0;
 
 		return ret;
 	}
 
 };
 
+struct AnimationOnGameCharacter
+{
+	AnimationOnGameCharacter(SpriteSheetAnimationType *type, double rotation,
+		int indexOfCharacter,
+		XYPair<double> animationOffset):
+	animation(type, rotation),
+	characterIndexAnimationIsCenteredOn(indexOfCharacter),
+	offset(animationOffset)
+	{}
+	SpriteSheetAnimation animation;
+	int characterIndexAnimationIsCenteredOn;
+	XYPair<double> offset;
+
+};
 
 };
 #endif

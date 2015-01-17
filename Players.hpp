@@ -37,6 +37,7 @@ namespace gauntlet
 
 		/* Items that can be used as a secondary action from action bar*/
 		std::vector<int> inventory;
+		std::vector<int> contextualActions;
 
 		void SetStatsToDefaultForCharacterType();
 		void SetNameToCharacterName();

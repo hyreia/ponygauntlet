@@ -10,7 +10,7 @@ spawnsLeft(_type->spawnLimit),
 spawnCooldown(_type->spawnCooldownRate)
 {
 			spawnsLeft = type->spawnLimit;
-			size_t animationListSize = app->data.spriteSheetAnimationTypes.size();
+			int animationListSize = app->data.spriteSheetAnimationTypes.size();
 			if(type->idleAnimationIndex < animationListSize)
 			{
 				SpriteSheetAnimation idle(&(app->data.spriteSheetAnimationTypes[type->idleAnimationIndex]));

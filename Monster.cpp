@@ -4,9 +4,10 @@
 
 using namespace gauntlet;
 
-Monster::Monster(XYPair<double> _position, int startFacing, MonsterType &type):
+Monster::Monster(unsigned int ID, XYPair<double> _centerStartPos, int startFacing, MonsterType &type):
 type(&type),
-GameCharacter(_position, XYPair<double>(type.radius, type.radius), type.bitmap,
+GameCharacter(ID, _centerStartPos, 
+				XYPair<double>(type.radius, type.radius), type.bitmap,
 Rect<double>(0, 0, type.imageWidth, type.imageHeight), startFacing,
 type.height, type.startAltitude),
 energy(type.maxEnergy),
@@ -39,8 +40,6 @@ void Monster::LookAt(XYPair<double> position)
 	auto center = hitbox.Center();
 	double radian = atan2(center.y - position.y, position.x - center.x);
 	SetFacingAngle(radian);				
-
-	//SetFacingFromRadian(radian);
 }
 
 void Monster::LookAwayFrom(XYPair<double> position)
@@ -48,7 +47,7 @@ void Monster::LookAwayFrom(XYPair<double> position)
 	auto center = hitbox.Center();
 	double radian = atan2(center.y - position.y, center.x - position.x);
 	radian += ALLEGRO_PI;
-	SetFacingFromRadian(radian);
+	SetFacingAngle(radian);
 }
 
 void Monster::SetVelocityToForward()
@@ -58,7 +57,7 @@ void Monster::SetVelocityToForward()
 
 void Monster::SetVelocityToDirection(double radian)
 {
-	const double MULTIPLIER = 1.7;
+	const double MULTIPLIER = 1.4;
 	auto moveSpeed = (type->moveSpeed * MULTIPLIER)  / app->TPS;
 
 	velocity.x = moveSpeed * cos(radian);
@@ -68,6 +67,12 @@ void Monster::SetVelocityToDirection(double radian)
 
 void Monster::AddStepSpeedToAnimation()
 {
-	const double MOVE_BASE_SPEED = 8.0;
+	const double MOVE_BASE_SPEED = 12.0;
 	AddStepsToAnimation((type->moveSpeed * app->dt + MOVE_BASE_SPEED) / app->TPS);
+}
+
+void Monster::DecreaseHealth(double damage)
+{
+	health -= damage;
+	if(health <0) health = 0;
 }

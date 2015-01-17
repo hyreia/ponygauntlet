@@ -32,7 +32,7 @@ namespace gauntlet
 	class Monster: public GameCharacter
 	{
 	public:
-		Monster(XYPair<double> position, int startFacing, MonsterType &type);
+		Monster(unsigned int ID, XYPair<double> centerStartPos, int startFacing, MonsterType &type);
 
 		int GetAiType();
 		void DecrementThinkCooldown();
@@ -45,6 +45,8 @@ namespace gauntlet
 		void SetVelocityToDirection(double radian);
 
 		void AddStepSpeedToAnimation();
+
+		void DecreaseHealth(double damage);
 	private:
 		MonsterType *type;
 		int health, energy;

@@ -6,7 +6,7 @@ using namespace gauntlet;
 
 double GameCharacter::drawAlpha = 0.0;
 
-GameCharacter::GameCharacter(XYPair<double> _position, XYPair<double> _size,
+GameCharacter::GameCharacter(unsigned int _ID, XYPair<double> _position, XYPair<double> _size,
 	std::shared_ptr<Bitmap> _bitmap,
 	Rect<double> _imageSource,
 	int _startFacing,
@@ -20,10 +20,11 @@ GameEntity( Rect<double>(_position.x, _position.y, _size.x, _size.y), _bitmap,_i
 	stepsInAnimation(0.0),
 	animationTime(0),
 	facingAngle(0.0),
-	numOfFacingAngleLocks(0),
-	numOfMovementLocks(0),
 	lastPosition(_position.x, _position.y),
-	wasTileBlocked(false)
+	ID(_ID),
+	timeLeftStunned(0.0),
+	movementLocksFromAnAttack(0),
+	rotationLocksFromAnAttack(0)
 {
 	//Set facingAngle from startFacing
 	facingAngle = ((double)animationFacing/(double)TOTAL_DIRECTIONS) * 2*ALLEGRO_PI;
@@ -37,6 +38,11 @@ Rect<double> GameCharacter::GetImageBoxAtDeltaTime(double alpha)
 		(lastPosition.x + ((hitbox.x)-lastPosition.x) * alpha)+imageToHitboxOffset.x,
 			(lastPosition.y + ((hitbox.y)-lastPosition.y) * alpha)+imageToHitboxOffset.y + altitude,
 			imageSize.x, imageSize.y);
+}
+
+unsigned int GameCharacter::GetID()
+{
+	return ID;
 }
 
 Rect<double> GameCharacter::GetHitboxAtDeltaTime(double alpha)
@@ -62,6 +68,10 @@ void GameCharacter::AddVelocityToPosition()
 	hitbox.x += velocity.x;
 	hitbox.y += velocity.y;
 }
+
+void GameCharacter::SetForcedVelocity(double x, double y){ forcedVelocity.x = x; forcedVelocity.y = y; }
+XYPair<double> GameCharacter::GetForcedVelocity(){ return forcedVelocity; }
+
 	
 void GameCharacter::SetLastPosition(XYPair<double> previousPosition)
 {
@@ -135,7 +145,7 @@ void GameCharacter::SetFacingDirection(int direction)
 	{
 		animationFacing = direction;
 		//Keep the two consistent
-		facingAngle = ((double)animationFacing/(double)TOTAL_DIRECTIONS) * 2*ALLEGRO_PI;
+		//facingAngle = ((double)animationFacing/(double)TOTAL_DIRECTIONS) * 2*ALLEGRO_PI;
 	}
 	//else don't set facing to the invalid direction
 }
@@ -165,7 +175,6 @@ void GameCharacter::UpdateAnimation()
 	{
 		
 		const double STEPS_IN_MOVING_ANIMATION = imageBitmap->Width()/imageSize.x - 1.0;
-		printf("STEPS IN MOVING ANIMATION: %f\n", STEPS_IN_MOVING_ANIMATION);
 		if(stepsInAnimation >= STEPS_IN_MOVING_ANIMATION)
 		{
 			stepsInAnimation = stepsInAnimation - STEPS_IN_MOVING_ANIMATION;
@@ -202,52 +211,66 @@ void GameCharacter::SetAltitude(double newAltitude)
 	altitude = newAltitude;
 }
 
-void GameCharacter::AddLockToFacingAngle()
-{
-	numOfFacingAngleLocks++;
-}
-
-void GameCharacter::RemoveLockFromFacingAngle()
-{
-	numOfFacingAngleLocks--;
-}
-
-bool GameCharacter::IsFacingAngleLocked()
-{
-	return (numOfFacingAngleLocks>0);
-}
-
-void GameCharacter::AddLockToMovement()
-{
-	numOfMovementLocks++;
-}
-
-void GameCharacter::RemoveLockFromMovement()
-{
-	numOfMovementLocks--;
-}
-
-bool GameCharacter::isMovementLocked()
-{
-	return (numOfMovementLocks>0);
-}
-
 double GameCharacter::GetRenderSortY()
 {
 	return (lastPosition.y + (hitbox.y-lastPosition.y) * drawAlpha) + hitbox.h;
 }
 
+void GameCharacter::AddForcedVelocityToVelocity()
+{
+
+}
+
+
+void GameCharacter::LockMovementFromAnAttack()
+{
+	movementLocksFromAnAttack++;
+}
+
+void GameCharacter::UnlockMovementFromAnAttack()
+{
+	if(movementLocksFromAnAttack>0) movementLocksFromAnAttack--;
+}
+
+bool GameCharacter::IsMovementLockedFromAnAttack()
+{
+	return (movementLocksFromAnAttack>0);
+}
+
+void GameCharacter::LockRotationFromAnAttack()
+{
+	rotationLocksFromAnAttack++;
+}
+
+void GameCharacter::UnlockRotationFromAnAttack()
+{
+	if(rotationLocksFromAnAttack>0) rotationLocksFromAnAttack--;
+}
+
+bool GameCharacter::IsRotationLockedFromAnAttack()
+{
+	return (rotationLocksFromAnAttack>0);
+}
+
+
+bool GameCharacter::IsStunTimeLeft()
+{
+	return timeLeftStunned>0;
+}
+
+void GameCharacter::SetStunTime(double timeToStun)
+{
+	timeLeftStunned = timeToStun;
+}
+
+void GameCharacter::DecreaseStunTime(double timeToSubtract)
+{
+	timeLeftStunned -= timeToSubtract;
+	if(timeLeftStunned < 0) timeLeftStunned = 0;
+}
+
+
 bool gauntlet::CompareCharactersByYAxis(GameCharacter *a, GameCharacter *b)
 {
 	return (a->GetRenderSortY() < b->GetRenderSortY());
-}
-
-void GameCharacter::SetWasTileBlocked(bool isBlockedByTile)
-{
-	wasTileBlocked = isBlockedByTile;
-}
-
-bool GameCharacter::GetWasTileBlocked()
-{
-	return wasTileBlocked;
 }

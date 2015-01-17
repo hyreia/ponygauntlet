@@ -61,3 +61,9 @@ XYPair<double> GameEntity::ImageSource(){ return imageSource; }
 int GameEntity::ImageDrawingFlags(){ return imageDrawingFlags; }
 
 std::shared_ptr<Bitmap> GameEntity::GetSourceBitmap(){ return imageBitmap; }
+
+void GameEntity::SetNewBitmap(std::shared_ptr<Bitmap> bitmap)
+{
+
+	CalculateImageToHitboxOffset();
+}

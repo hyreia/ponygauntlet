@@ -48,6 +48,8 @@ public:
 	bool IsMouseButtonClicked(int buttonNo);
 	/* return radian angle to mouse position*/
 	double GetAngleToMouse( double srcX, double srcY);
+	double MouseX();
+	double MouseY();
 private:
 
 	void SetButtonPosition(int player, int button, bool isDown);

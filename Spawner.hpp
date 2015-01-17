@@ -29,7 +29,7 @@ namespace gauntlet
 		/* number of monsters it can spawn until it destroys itself, -1 for unlimited*/
 		int spawnLimit;
 
-		/* spawner starting/max ife*/
+		/* spawner starting/max life*/
 		int durability;
 		
 		/* in seconds */

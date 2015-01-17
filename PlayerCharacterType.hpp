@@ -5,6 +5,7 @@
 #include <memory>
 #include "XYPair.hpp"
 #include "Bitmap.hpp"
+#include "ActionList.hpp"
 
 namespace gauntlet
 {
@@ -25,7 +26,7 @@ namespace gauntlet
 			std::string _personalityDescription,
 			std::string _abilitiesDescription,
 			int _strength, int _magic, int _speed, int _armor,
-			int _mainAction,
+			Action _mainAction,
 			XYPair<double> _imageSize,
 			double _height,
 			double _radius):
@@ -38,15 +39,15 @@ namespace gauntlet
 		bitmap(_bitmap),
 		personalityDescription(_personalityDescription),
 		abilitiesDescription(_abilitiesDescription),
-		mainAction(_mainAction),
+		mainAttack(_mainAction),
 		radius(_radius),
 		imageSize(_imageSize),
 		height(_height)
 		{}
 		int strength, magic, speed, armor;
 
-		unsigned int mainAction;
-		std::vector<unsigned int> secondaryInherentActions;
+		Action mainAttack;
+		std::vector<Action> secondaryInherentActions;
 
 		std::shared_ptr<Bitmap> bitmap;
 		std::string defaultName;

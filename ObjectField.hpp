@@ -4,6 +4,7 @@
 #include <vector>
 #include "RectAndCircle.hpp"
 #include "XYPair.hpp"
+#include <map>
 
 #include "CollisionGridCell.hpp"
 /* A collection of dungeon entities in the tile grid locations where they are
@@ -80,9 +81,19 @@ namespace gauntlet
 		void SetSpawner(int tileX, int tileY, Spawner *newSpawner);
 		Spawner *GetSpawner(int tileX, int tileY);
 
-	private:
-		std::vector< std::vector< ObjectFieldCell> > objectField;
+		unsigned int GetNextCharacterReferenceID();
+		GameCharacter *GetCharacterFromID(unsigned int characterID);
 
+	private:
+		void RemoveCharacterReference(unsigned int characterID);
+		void InsertCharacterReference(GameCharacter *character);
+		
+		
+
+		std::vector< std::vector< ObjectFieldCell> > objectField;
+		
+		std::map<unsigned int, GameCharacter*> charactersOnMap;
+		unsigned int nextCharacterIdAvailable;
 	};
 
 };

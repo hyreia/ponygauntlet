@@ -1,7 +1,9 @@
 #include "GauntletApp.hpp"
 #include "GameScreen.hpp"
+#include <ctime>
 
 #include "TestGameScreen.hpp"
+#include "CharacterSelectScreen.hpp"
 
 using namespace gauntlet;
 
@@ -20,6 +22,7 @@ GauntletApp::~GauntletApp()
 
 void GauntletApp::Initialize()
 {
+	srand(time(NULL));
 	if(allegro.Initialize())
 	{
 		//Initialize all other subsystems
@@ -59,7 +62,7 @@ void GauntletApp::StartFirstScreen()
 {
 	//TODO: this
 	Player *player = &players.GetPlayer(1);
-	player->characterType = &data.playerCharacterTypes[PC_ARCHER];
+	player->characterType = &data.playerCharacterTypes[PC_WARRIOR];
 	player->isPlaying = true;
 	player->SetNameToCharacterName();
 	player->SetStatsToDefaultForCharacterType();
@@ -70,7 +73,8 @@ void GauntletApp::StartFirstScreen()
 	player->SetNameToCharacterName();
 	player->SetStatsToDefaultForCharacterType();
 	
-	currentScreen = new TestGameScreen();
+	//currentScreen = new TestGameScreen();
+	currentScreen = new CharacterSelectScreen();
 }
 
 void GauntletApp::MainLoop()

@@ -44,6 +44,7 @@ class GameEntity
 		int ImageDrawingFlags();
 
 		std::shared_ptr<Bitmap> GetSourceBitmap();
+		
 
 		/* Used to immediately see what tiles a GameEntity is intersecting,
 		 * so that when we need to remove or move it we have that calculated already.
@@ -77,12 +78,14 @@ class GameEntity
 		/* Flags used to draw entity (1|2 = vertical/horizontal flip respectively) */
 		int imageDrawingFlags;
 
-private:
+		void SetNewBitmap(std::shared_ptr<Bitmap> bitmap);
+	private:
 		/* Called in constructor */
 		void CalculateImageToHitboxOffset();
 		/* Called in constructor */
 		void CalculateNumOfTileIntersectionsToReserve();
 };
+
 };
 
 #endif

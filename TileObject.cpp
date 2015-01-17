@@ -24,7 +24,13 @@ XYPair<double> TileObject::ImageSource()
 
 Rect<double> TileObject::GetImageBox()
 {
-	return animations[currentAnimationIndex].GetImageBox(centerPos.x, centerPos.y);
+	//We want the bottom of the image to rest at the bottom of the tile
+
+	double bottomOfTile = (floor( centerPos.y / Tile::TILE_SIZE)+1) * Tile::TILE_SIZE;
+
+	Rect<double> ret = animations[currentAnimationIndex].GetImageBox(centerPos.x, centerPos.y);
+	ret.y = bottomOfTile - ret.h;
+	return ret;
 }
 
 void TileObject::AddTimeToAnimation(double time)

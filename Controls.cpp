@@ -20,8 +20,9 @@ const int Controls::DEFAULT_CONTROLS[TOTAL_PLAYER_BUTTONS] =
 	ALLEGRO_KEY_A, //move left
 	MOUSE_BUTTON_1, //main item
 	MOUSE_BUTTON_2, //secondary item
-	MOUSE_Z_INCREMENT, //increment secondary item
-	MOUSE_Z_DECREMENT, //decrement secondary item
+	MOUSE_Z_DECREMENT, //increment secondary item
+	MOUSE_Z_INCREMENT, //decrement secondary item
+
 	ALLEGRO_KEY_P, //pause button
 	ALLEGRO_KEY_ESCAPE //menu
 };
@@ -191,6 +192,9 @@ double Controls::GetAngleToMouse( double srcX, double srcY)
 	return atan2((double)srcY - double(mousePositions[1]), double(mousePositions[0]) - (double)srcX);
 	//return atan2(double(mousePositions[1]) - (double)srcY, double(mousePositions[0]) - (double)srcX);
 }
+
+double Controls::MouseX(){ return mousePositions[0]; }
+double Controls::MouseY(){ return mousePositions[1]; }
 
 void Controls::SetButtonPosition(int player, int button, bool isDown)
 {

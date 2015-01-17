@@ -69,7 +69,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\allegro\5.0.9\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\allegro\5.0.9\include;C:\Libraries\allegro_tiled\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -77,16 +77,19 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\allegro\5.0.9\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\allegro\5.0.9\lib;C:\Libraries\allegro_tiled\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>allegro-5.0.9-monolith-mt.lib;allegro_tiled.lib;libxml2.lib;zdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Allegro.cpp" />
+    <ClCompile Include="Attack.cpp" />
     <ClCompile Include="Bitmap.cpp" />
+    <ClCompile Include="CharacterSelectScreen.cpp" />
     <ClCompile Include="ConfigFile.cpp" />
     <ClCompile Include="Controls.cpp" />
     <ClCompile Include="EntityBatchRenderer.cpp" />
+    <ClCompile Include="Font.cpp" />
     <ClCompile Include="GameCharacter.cpp" />
     <ClCompile Include="GameDataRepository.cpp" />
     <ClCompile Include="GameEntity.cpp" />
@@ -108,16 +111,19 @@
     <ClInclude Include="ActionBar.hpp" />
     <ClInclude Include="ActionList.hpp" />
     <ClInclude Include="Allegro.hpp" />
+    <ClInclude Include="Attack.hpp" />
     <ClInclude Include="AttackType.hpp" />
     <ClInclude Include="Bitmap.hpp" />
     <ClInclude Include="BreakableWall.hpp" />
     <ClInclude Include="Button.hpp" />
+    <ClInclude Include="CharacterSelectScreen.hpp" />
     <ClInclude Include="CollisionGridCell.hpp" />
     <ClInclude Include="ConfigFile.hpp" />
     <ClInclude Include="Controls.hpp" />
     <ClInclude Include="Directions.hpp" />
     <ClInclude Include="EntityBatchRenderer.hpp" />
     <ClInclude Include="Exit.hpp" />
+    <ClInclude Include="Font.hpp" />
     <ClInclude Include="GameCharacter.hpp" />
     <ClInclude Include="GameDataRepository.hpp" />
     <ClInclude Include="GameEntity.hpp" />
@@ -129,6 +135,7 @@
     <ClInclude Include="LevelMap.hpp" />
     <ClInclude Include="Lever.hpp" />
     <ClInclude Include="Monster.hpp" />
+    <ClInclude Include="MovingGameEntity.hpp" />
     <ClInclude Include="Music.hpp" />
     <ClInclude Include="ObjectField.hpp" />
     <ClInclude Include="PlayerCharacter.hpp" />

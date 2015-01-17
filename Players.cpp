@@ -33,7 +33,7 @@ void Player::SetStatsToDefaultForCharacterType()
 	if(characterType)
 	{
 		strength = characterType->strength;
-		magic = characterType->speed;
+		magic = characterType->magic;
 		speed = characterType->speed;
 		armor = characterType->armor;
 		maxHealth = strength+magic+speed+armor;

@@ -9,7 +9,7 @@ namespace gauntlet
 	class PlayerCharacter: public GameCharacter
 	{
 	public:
-		PlayerCharacter(XYPair<double> position, Player &player);
+		PlayerCharacter(unsigned int ID, XYPair<double> position, Player &player);
 
 		Player &GetPlayer();
 	private:

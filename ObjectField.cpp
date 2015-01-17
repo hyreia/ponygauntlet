@@ -6,7 +6,9 @@
 
 using namespace gauntlet;
 
-ObjectField::ObjectField(){}
+ObjectField::ObjectField():
+nextCharacterIdAvailable(0)
+{}
 ObjectField::~ObjectField(){}
 
 void ObjectField::InitializeToSize(int width, int height)
@@ -134,6 +136,8 @@ void ObjectField::Insert(PlayerCharacter *pc)
 	{
 		collisionGrid[tile->x][tile->y].Insert(pc);
 	}
+
+	InsertCharacterReference(pc);
 }
 
 void ObjectField::Insert(Monster *monster)
@@ -144,6 +148,8 @@ void ObjectField::Insert(Monster *monster)
 	{
 		collisionGrid[tile->x][tile->y].Insert(monster);
 	}
+
+	InsertCharacterReference(monster);
 }
 
 void ObjectField::Remove(PlayerCharacter *pc)
@@ -153,6 +159,8 @@ void ObjectField::Remove(PlayerCharacter *pc)
 		collisionGrid[tile->x][tile->y].Remove(pc);
 	}	
 	pc->tilesIntersected.clear();
+
+	RemoveCharacterReference((pc->GetID()));
 }
 
 void ObjectField::Remove(Monster *monster)
@@ -162,6 +170,8 @@ void ObjectField::Remove(Monster *monster)
 		collisionGrid[tile->x][tile->y].Remove(monster);
 	}
 	monster->tilesIntersected.clear();
+
+	RemoveCharacterReference((monster->GetID()));
 }
 
 Spawner *ObjectField::GetSpawner(int tileX, int tileY){ return objectField[tileX][tileY].spawner; }
@@ -174,4 +184,40 @@ void ObjectField::SetSpawner(int tileX, int tileY, Spawner *newSpawner)
 	}
 
 	objectField[tileX][tileY].spawner = newSpawner;
+}
+
+void ObjectField::RemoveCharacterReference(unsigned int characterID)
+{
+	if(charactersOnMap.count(characterID) == 1)
+	{
+		charactersOnMap.erase(characterID);
+	}
+}
+
+void ObjectField::InsertCharacterReference(GameCharacter *character)
+{
+	auto id = character->GetID();
+	charactersOnMap.insert(std::pair<unsigned int, GameCharacter*>(id, character));
+	if(nextCharacterIdAvailable <= id)
+	{
+		nextCharacterIdAvailable = id+1;
+	}
+}
+
+GameCharacter *ObjectField::GetCharacterFromID(unsigned int characterID)
+{
+	GameCharacter *ret = NULL;
+
+	if(charactersOnMap.count(characterID) == 1)
+	{
+		ret = charactersOnMap[characterID];
+	}
+	//else do nothing
+
+	return ret;
+}
+
+unsigned int ObjectField::GetNextCharacterReferenceID()
+{
+	return nextCharacterIdAvailable;
 }
